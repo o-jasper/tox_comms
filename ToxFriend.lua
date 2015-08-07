@@ -12,7 +12,7 @@ local ToxFriend = { __name = "ToxFriend" }
 ToxFriend.__init = ToxFriend
 
 function ToxFriend.new(self)
-   setmetatable(self, ToxFriend)
+   return setmetatable(self, ToxFriend)
 end
 
 function ToxFriend:init()
