@@ -87,7 +87,7 @@ end
 
 function Tox._add_friend_fid(self, fid)
    local friend = ToxFriend.new{fid=fid, tox=self}
-   self.friend_list[fid] = friend
+   self.friends[fid] = friend
    return friend
 end
 
@@ -105,12 +105,7 @@ end
 
 function Tox.friend_by_pubkey(pubkey)
    local fid = tox_friend_by_public_key(self.cdata, to_c.addr(pubkey))
-   local got = self.friend_list[fid]
-   if not got then
-      got = ToxFriend.new{fid=fid, tox=self}
-      self.friend_list[fid] = got
-   end
-   return got
+   return self.friends[fid] or self:_add_friend_fid(fid)
 end
 
 -- Functions that use a pointer now just return.
@@ -120,13 +115,13 @@ Tox_ret_via_arg("self_get_name")
 Tox_ret_via_arg("self_get_status_message")
 Tox_ret_via_arg("self_get_friend_list", "uint32_t[?]", true)
 
-function Tox.self_get_friend_list()
-   for _,fid in pairs(self:_self_get_friend_list()) do
-      if not self.friend_list[fid] then
-         self.friend_list[fid] = ToxFriend.new{fid=fid, tox=self}  -- By fid!
+function Tox.self_get_friends()
+   for _,fid in pairs(self:_self_get_friends()) do
+      if not self.friends[fid] then
+         self.friends[fid] = ToxFriend.new{fid=fid, tox=self}  -- By fid!
       end
    end
-   return self.friend_list
+   return self.friends
 end
 
 Tox_ret_via_arg("get_savedata", "uint8_t[?]")
@@ -149,31 +144,37 @@ end
 Tox_set_default_size("self_set_name")
 Tox_set_default_size("self_status_message")
 
-Tox.callbacks = {
-   self_connection_status = function(_, status)
-      print(status)  -- Probably 0 none, 1 tcp, 2 udp
-   end,
-   friend_connection_status = function(_, status)
-      print(status)  -- Probably 0 none, 1 tcp, 2 udp
-   end,
-   friend_message = function(_, fid, tp, msg, msg_len)
-      --assert( #msg == msg_len )
-      -- tp is either normal or action.
-      --tox_history:add_msg({from_id = ids[fid], tp = tp, msg = msg })
-      print(fid, tp, ffi.string(msg, msg_len), msg_len)
-   end,
-
-   friend_request = function(_, from_pubkey, msg, msg_len)
-      print(ffi.string(from_pubkey, 38), ffi.string(msg, msg_len))
-   end,
-}
-
-function Tox:update_callbacks()
-   for name,cb in pairs(getmetatable(self).callbacks) do
-      local cb = self.callbacks[name] or cb
-      self["callback_" .. name](self, cb, nil)
-   end
+function Tox:update_callback(name, set_fun)
+   local cb_n = "cb_" .. name
+   self[cb_n] = self[cb_n] or set_fun
+   self["callback_" .. name](self, self[cb_n], nil)
 end
+
+-- Note: can skip some work if none of the friends are treated differently.
+function Tox:update_friend_callback(name, set_fun)
+   local own_cb = self["cb_friend_" .. name] or set_fun
+   self["cb_friend_" .. name] = own_cb
+   local function cb(itself, fid, ...)
+      local friend = self.friends[fid]
+      local friend_cb = friend and friend["cb_" .. name]
+      if friend_cb then
+         friend_cb(friend, ...)
+      end
+      if own_cb then
+         own_cb(self, friend, ...)
+      end
+   end
+   self["callback_friend_" .. name](self, cb, nil)
+end
+
+--   callback_friend_name = false,
+--   callback_friend_status_message = false,
+--   callback_friend_status = false,
+--   callback_friend_connection_status = false,
+--   callback_friend_typing = false,
+--   callback_friend_read_receipt = false,
+--   callback_friend_request = false,
+--   callback_friend_message = false,
 
 function Tox.new(self)
    if type(self.opts) == "table" then 
@@ -181,10 +182,9 @@ function Tox.new(self)
       self.opts = self.opts.cdata
    end
    self.cdata = raw.tox_new(opts, data, len or 0, err)
-   self.friend_list = {}
+   self.friends = {}
    local ret = setmetatable(self, Tox)
    self:self_set_name(self.name or "(unnamed)")
-   ret:update_callbacks()
    return ret
 end
 
