@@ -33,12 +33,11 @@ end
 
 function Public.str(str, tp)
    assert(type(str) == "string")
-   local i, ret = 0, ffi.new(tp or "uint8_t[?]", #str + 1)
+   local i, ret = 0, ffi.new(tp or "uint8_t[?]", #str)
    while i < #str do
       ret[i] = string.byte(str, i + 1)
       i = i + 1
    end
-   ret[#str] = 0
    return ret
 end
 
