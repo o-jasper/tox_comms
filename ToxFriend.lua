@@ -13,11 +13,8 @@ local ToxFriend = { __name = "ToxFriend" }
 ToxFriend.__index = ToxFriend
 
 function ToxFriend.new(self)
-   return setmetatable(self, ToxFriend)
-end
-
-function ToxFriend:init()
    self.cdata = self.tox.cdata
+   return setmetatable(self, ToxFriend)
 end
 
 for k,v in pairs({delete=false, exists=false, get_status="status",
