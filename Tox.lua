@@ -114,16 +114,19 @@ end
 local function Tox_ret_via_arg(name, ...) Tox[name] = to_c.ret_via_arg(name, ...) end
 Tox_ret_via_arg("self_get_name")
 Tox_ret_via_arg("self_get_status_message")
-Tox_ret_via_arg("self_get_friend_list", "uint32_t[?]", true)
 
-function Tox.self_get_friends()
-   for _,fid in pairs(self:_self_get_friends()) do
-      if not self.friends[fid] then
-         self.friends[fid] = ToxFriend.new{fid=fid, tox=self}  -- By fid!
-      end
+function Tox:friends_update()
+   local ret, n = {}, self:self_get_friend_list_size()
+   local list = ffi.new("uint32_t[?]", n)
+   self:_self_get_friend_list(list)
+   local i = 0
+   while i < n do
+      self.friends[list[i]] = ToxFriend.new{fid=list[i], tox=self}
+      i = i + 1
    end
    return self.friends
 end
+Tox_ret_via_arg("", "uint32_t[?]")
 
 Tox_ret_via_arg("get_savedata", "uint8_t[?]")
 
@@ -177,6 +180,15 @@ end
 --   callback_friend_request = false,
 --   callback_friend_message = false,
 
+local function readall(fd)
+   local ret, more = "", fd:read(1024)
+   while more do
+      ret = ret .. more
+      more = fd:read(1024)
+   end
+   return ret
+end
+
 function Tox.new(self)
    local opts = nil
    if self.savedata_file then
@@ -186,13 +198,8 @@ function Tox.new(self)
       local fd = io.open(self.savedata_file)
       if fd then
          opts = raw.tox_options_new(nil)
-         local got = fd:read(1024)
-         local more = fd:read(1024)
-         while more do
-            got = got .. more
-            more = fd:read(1024)
-         end
          opts.savedata_type = 1  -- TOX_SAVEDATA_TYPE_TOX_SAVE
+         local got = readall(fd)
          opts.savedata_length = #got
          opts.savedata_data = to_c.str(got)
          fd:close()
@@ -201,6 +208,7 @@ function Tox.new(self)
    self.cdata = raw.tox_new(opts, data, len or 0, err)
    self.friends = {}
    local ret = setmetatable(self, Tox)
+   if opts then ret:friends_update() end
    self:self_set_name(self.name or "(unnamed)")
    return ret
 end
