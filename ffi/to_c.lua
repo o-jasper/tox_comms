@@ -31,9 +31,9 @@ function Public.addr(addr)
    return ret
 end
 
-function Public.str(str)
+function Public.str(str, tp)
    assert(type(str) == "string")
-   local i, ret = 0, ffi.new("uint8_t[?]", #str + 1)
+   local i, ret = 0, ffi.new(tp or "uint8_t[?]", #str + 1)
    while i < #str do
       ret[i] = string.byte(str, i + 1)
       i = i + 1
