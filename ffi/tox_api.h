@@ -21,15 +21,27 @@ typedef enum TOX_PROXY_TYPE {
 
 } TOX_PROXY_TYPE;
 
+typedef enum TOX_SAVEDATA_TYPE {
+    TOX_SAVEDATA_TYPE_NONE,
+    TOX_SAVEDATA_TYPE_TOX_SAVE,
+    TOX_SAVEDATA_TYPE_SECRET_KEY,
+} TOX_SAVEDATA_TYPE;
+
 struct Tox_Options {
     bool ipv6_enabled;
     bool udp_enabled;
+
     TOX_PROXY_TYPE proxy_type;
     const char *proxy_host;
+
     uint16_t proxy_port;
     uint16_t start_port;
     uint16_t end_port;
+    uint16_t tcp_port;
 
+    TOX_SAVEDATA_TYPE savedata_type;
+    const uint8_t *savedata_data;
+    size_t savedata_length;
 };
 void tox_options_default(struct Tox_Options *options);
 

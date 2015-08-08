@@ -27,6 +27,7 @@ local tox_funlist = {
    self_get_address = true,
    self_get_secret_key = true,
 
+   get_savedata_size = false,
    get_savedata = true,
 
    friend_add = true,
@@ -177,15 +178,44 @@ end
 --   callback_friend_message = false,
 
 function Tox.new(self)
-   if type(self.opts) == "table" then 
-      assert(self.opts.cdata) 
-      self.opts = self.opts.cdata
+   local opts = nil
+   if self.savedata_file then
+      if self.savedata_file == true then
+         self.savedata_file = os.getenv("HOME") .. "/.tox_comms/savedata"
+      end
+      local fd = io.open(self.savedata_file)
+      if fd then
+         opts = raw.tox_options_new(nil)
+         local got = fd:read(1024)
+         local more = fd:read(1024)
+         while more do
+            got = got .. more
+            more = fd:read(1024)
+         end
+         opts.savedata_type = 1  -- TOX_SAVEDATA_TYPE_TOX_SAVE
+         opts.savedata_length = #got
+         opts.savedata_data = to_c.str(got)
+         fd:close()
+      end
    end
    self.cdata = raw.tox_new(opts, data, len or 0, err)
    self.friends = {}
    local ret = setmetatable(self, Tox)
    self:self_set_name(self.name or "(unnamed)")
    return ret
+end
+
+function Tox:write_savedata(to_file)
+   local to_file = to_file or self.savedata_file
+   to_file = (to_file ~= true and to_file) or getenv("HOME") .. "/.tox_comms/savedata"
+   local fd = io.open(to_file, "w")
+   if fd then
+      fd:write(self:get_savedata())
+      fd:close()
+      return to_file
+   else
+      return false
+   end
 end
 
 function Tox:loop()
