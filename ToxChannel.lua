@@ -1,4 +1,3 @@
-local json = require "json"
 local ffi  = require "ffi"
 
 local ToxFriend = require "tox_comms.ToxFriend"
@@ -17,6 +16,8 @@ function ToxChannel.new(self)
    return setmetatable(self, ToxChannel)
 end
 
+-- Just in case one might want to change them,
+local json = require "json"
 ToxChannel.encode = json.encode
 ToxChannel.decode = json.decode
 
