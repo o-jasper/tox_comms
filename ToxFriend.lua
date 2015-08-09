@@ -50,6 +50,11 @@ function ToxFriend:send_lossless_packet(data)
    return raw.tox_friend_send_lossless_packet(self.cdata, self.fid, to_c.str(data), #data, nil)
 end
 
+function ToxFriend:file_send(kind, size, filename, file_id)
+   return raw.tox_file_send(self.cdata, self.fid,
+                            size, file_id, to_c.str(filename), #filename, nil)
+end
+
 function ToxFriend:file_send_chunk(nr, pos, data)
    return raw.tox_file_send_chunk(self.cdata, self.fid, nr, pos, to_c.str(data), #data, nil)
 end
