@@ -21,24 +21,25 @@ local json = require "json"
 ToxChannel.encode = json.encode
 ToxChannel.decode = json.decode
 
+ToxChannel.call_file_kind = 1023
+
 function ToxChannel:call(name, data, return_callback)
    self.call_nr = self.call_nr + 1
    -- Register the function that has to respond on-return.
    self.return_cb[self.call_nr] = return_callback
 
    local json = self.encode(data)
-   local nr = self:file_send(1023, #json,
+   local nr = self:file_send(self.call_file_kind, #json,
                              string.format("fm:%s:%x", name, self.call_nr))
-   self:file_send_chunk(nr, 0, json)  -- Soooww.. tox cuts it up?
-   self:file_send_chunk(nr, #json, "") -- Zero length should stop it..
+   self:file_whole_data(nr, json)
 end
 
+-- Send return values.
 function ToxChannel:ret(name, data, call_nr)
    local json = self.encode(data)
-   local nr = self:file_send(1023, #json,
+   local nr = self:file_send(self.call_file_kind, #json,
                              string.format("ret:%s:%x", name, call_nr))
-   self:file_send_chunk(nr, 0, json)  -- Soooww.. tox cuts it up for me?
-   -- self:file_send_chunk(nr, #json, "") -- Do i need to explicitly stop it?
+   self:file_whole_data(nr, json)
 end
 
 local function name_and_number(filename)
