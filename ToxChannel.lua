@@ -1,3 +1,10 @@
+--  Copyright (C) 09-08-2015 Jasper den Ouden.
+--
+--  This is free software: you can redistribute it and/or modify
+--  it under the terms of the GNU General Public License as published
+--  by the Free Software Foundation, either version 3 of the License, or
+--  (at your option) any later version.
+
 local ffi  = require "ffi"
 
 local ToxFriend = require "tox_comms.ToxFriend"
@@ -8,6 +15,7 @@ for k,v in pairs(ToxFriend) do ToxChannel[k] = ToxFriend[k] end
 ToxChannel.__name = "ToxChannel"
 ToxChannel.__index = ToxChannel
 
+-- Note ToxChannel.new(a_ToxFriend) should upgrade the friend to a channel
 function ToxChannel.new(self)
    self.call_nr = 0
    self.cdata = self.tox.cdata
