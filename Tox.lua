@@ -189,6 +189,13 @@ local function readall(fd)
    return ret
 end
 
+function Tox:default_bootstrap()
+   -- TODO this is a random one. Use a list and try them randomly.
+   comm:bootstrap("54.199.139.199", 33445,
+                  "951C88B7E75C867418ACDB5D273821372BB5BD652740BCDF623A4FA293E75D2F",
+                  nil)
+end
+
 function Tox.new(self)
    local opts = nil
    if self.savedata_file then
@@ -208,7 +215,13 @@ function Tox.new(self)
    self.cdata = raw.tox_new(opts, data, len or 0, err)
    self.friends = {}
    local ret = setmetatable(self, Tox)
-   if opts then ret:friends_update() end
+   if opts then
+      ret:friends_update()
+   else
+      if self.auto_bootstrap then
+         ret:default_bootstrap()
+      end
+   end
    self:self_set_name(self.name or "(unnamed)")
    return ret
 end

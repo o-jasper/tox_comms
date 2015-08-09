@@ -2,7 +2,7 @@ local ffi = require "ffi"
 
 local Tox = require "Tox"
 
-local comm = Tox.new({ savedata_file=true })
+local comm = Tox.new({ savedata_file=true, auto_bootstrap=true})
 
 local function hexify(list, n)
    local hex = "0123456789ABCDEF"
@@ -31,16 +31,14 @@ end)
 
 print(hexify(comm:self_get_address(), 38))
 
-print(comm:bootstrap("54.199.139.199",
-                     33445, "951C88B7E75C867418ACDB5D273821372BB5BD652740BCDF623A4FA293E75D2F",
-                     nil))
-
 local msg = "testing friend add(just some dude)"
+-- Adds an account i happen to have.
 print("fa:", comm:friend_add("DB116EA92FC6E85C24B9AF5E8F61BAF1F853B2D8B21E9D4AF8E29532435099085C589E40DC1A", msg, #msg, nil))
 
-print("SAVEDATA:", comm:get_savedata())
+
 
 print(comm:write_savedata())
+print(comm:self_get_name())
 
 local socket = require "socket"
 while true do
