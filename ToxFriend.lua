@@ -58,5 +58,8 @@ end
 function ToxFriend:file_send_chunk(nr, pos, data)
    return raw.tox_file_send_chunk(self.cdata, self.fid, nr, pos, to_c.str(data), #data, nil)
 end
+function ToxFriend:file_whole_data(nr, data)
+   return raw.tox_file_send_chunk(self.cdata, self.fid, nr, 0, to_c.str(data), #data, nil)
+end
 
 return ToxFriend
