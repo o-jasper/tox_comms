@@ -98,9 +98,9 @@ function Tox.friend_add(self, addr, comment)
    return self:_add_friend_fid(fid)
 end
 
-function Tox.friend_add_norequest(self, addr, comment)
-   local addr, _comment = to_c.addr(addr), to_c.str(comment)
-   local fid = raw.tox_friend_add_norequest(self.cdata, addr, _comment, #comment, nil)
+function Tox.friend_add_norequest(self, addr)
+   local addr = to_c.addr(addr)
+   local fid = raw.tox_friend_add_norequest(self.cdata, addr, nil)
    return self:_add_friend_fid(fid)
 end
 
@@ -191,16 +191,22 @@ end
 
 function Tox:default_bootstrap()
    -- TODO this is a random one. Use a list and try them randomly.
-   comm:bootstrap("54.199.139.199", 33445,
+   self:bootstrap("54.199.139.199", 33445,
                   "951C88B7E75C867418ACDB5D273821372BB5BD652740BCDF623A4FA293E75D2F",
                   nil)
 end
+
+Tox.pubkey_name = "default"
+
+local lfs = require "lfs"  -- Dont understand why no `os.mkdir`
 
 function Tox.new(self)
    local opts = nil
    if self.savedata_file then
       if self.savedata_file == true then
-         self.savedata_file = os.getenv("HOME") .. "/.tox_comms/savedata"
+         local dirname = os.getenv("HOME") .. "/.tox_comms/" .. self.pubkey_name
+         lfs.mkdir(dirname)
+         self.savedata_file = dirname .. "/savedata"
       end
       local fd = io.open(self.savedata_file)
       if fd then
