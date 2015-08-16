@@ -96,13 +96,15 @@ ToxChannelMsg.data_cb = data_cb
 
 -- On-receive-call.
 function data_cb:json_call(nr, data)
-   local call = json.decode(data)
-   local fun = self.funs[call.name]
+   local j = string.find(data, ":", 1, true)
+   local name = string.sub(data, 1, j-1)
+   local args = json.decode(string.sub(data, j+1))
+   local fun = self.funs[name]
    if fun then  -- Got something for this.
       if self.returning_funs[name] then  -- Return the resulting value.
-         self:channel_data(json.encode(fun(unpack(call.args))), "json_ret")
+         self:channel_data(json.encode(fun(unpack(args))), "json_ret")
       else  -- Just call the function.
-         fun(unpack(call.args))
+         fun(unpack(args))
       end
    end
 end
@@ -113,13 +115,13 @@ function data_cb:json_ret(nr, data)
    local ret_cb = self.return_cb[nr]  -- The return callback.
    if ret_cb then
       self.return_cb[nr] = nil  -- No longer needed.
-      ret_cb(unpack(ret.args))
+      ret_cb(unpack(ret))
    end
 end
 
 function ToxChannelMsg:call(name, return_callback)
    return function(...)
-      local nr = self:channel_data(json.encode({name=name, args={...}}), "json_call")
+      local nr = self:channel_data(name .. ":" .. json.encode({...}), "json_call")
       self.return_cb[nr] = return_callback
    end
 end
