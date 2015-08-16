@@ -1,4 +1,4 @@
---  Copyright (C) 07-08-2015 Jasper den Ouden.
+--  Copyright (C) 14-08-2015 Jasper den Ouden.
 --
 --  This is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published
@@ -6,6 +6,7 @@
 --  (at your option) any later version.
 
 local raw = require "tox_comms.ffi.raw"
+
 local ffi = require "ffi"
 local to_c = require "tox_comms.ffi.to_c"
 
@@ -51,8 +52,10 @@ function ToxFriend:send_lossless_packet(data)
 end
 
 function ToxFriend:file_send(kind, size, filename, file_id)
+   -- TODO mysteriously, the third argument does not work.
    return raw.tox_file_send(self.cdata, self.fid,
-                            size, file_id, to_c.str(filename), #filename, nil)
+                            size, file_id or ffi.new("uint8_t*", nil),
+                            to_c.str(filename), #filename, nil)
 end
 
 function ToxFriend:file_send_chunk(nr, pos, data)
