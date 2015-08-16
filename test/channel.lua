@@ -1,7 +1,5 @@
 local ffi = require "ffi"
 
-local from_c = require "ffi.from_c"
-
 local Tox = require "Tox"
 local ToxChannel = require "ToxChannelMsg"
 
