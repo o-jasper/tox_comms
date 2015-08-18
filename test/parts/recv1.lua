@@ -1,6 +1,6 @@
 -- Makes sure the data is received at the other end.
 
--- Only checks the one-chunk sending.
+-- Doesnt check creating the message.
 
 local ToxChannelMsg = require "tox_comms.ToxChannelMsg"
 
@@ -16,6 +16,7 @@ local obj = {
       print("in", ...)
       return ToxChannelMsg.cb_message(...)
    end,
+   cb_chunk = ToxChannelMsg.cb_chunk,
    data_cb = 
       setmetatable({}, {__index = 
                            function(_,k) 
