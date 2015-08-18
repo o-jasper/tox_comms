@@ -34,6 +34,7 @@ test("i am short")  -- Only one chunk.
 
 test("i am very very very longxxx")
 
+-- Something longer..
 local str, n = "", math.random(100,200)
 while n > 0 do
    str = str .. tostring(math.random()) .. "\n"

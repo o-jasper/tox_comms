@@ -152,6 +152,7 @@ function data_cb:json_ret(nr, data)
    end
 end
 
+-- Uses the two above to make calls.
 function ToxChannelMsg:call(name, return_callback)
    return function(...)
       local nr = self:channel_data("json_call", name .. ":" .. json.encode({...}))
