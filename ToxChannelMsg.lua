@@ -66,7 +66,7 @@ function ToxChannelMsg:channel_data(name, data)
    return nr
 end
 
-function ToxChannelMsg:check_got_chunks(nr, chunks)
+function ToxChannelMsg:_check_got_chunks(nr, chunks)
    if chunks.n and chunks.n == chunks.got_cnt then
       -- Have it all, put it together, can call it.
       local data = chunks[0] .. table.concat(chunks)
@@ -91,7 +91,7 @@ function ToxChannelMsg:cb_chunk(data)
       self.transfers[nr] = chunks
 
       chunks.n = tonumber(string.sub(data, j1+3), 16)
-      self:check_got_chunks(nr, chunks)
+      self:_check_got_chunks(nr, chunks)
    elseif string.find(data, "^~~[%x]+:[%x]+:") then
       local j1 = string.find(data, ":", 1, true)
       local j2 = string.find(data, ":", j1 + 1, true)
@@ -104,7 +104,7 @@ function ToxChannelMsg:cb_chunk(data)
       chunks.got_cnt = (chunks.got_cnt or 0) + 1
       chunks[n] = string.sub(data, j2+1)
 
-      self:check_got_chunks(nr, chunks)
+      self:_check_got_chunks(nr, chunks)
    else
       local _, j1 = string.find(data, "^~~[%x]+:")
       local j2, j3 = string.find(data, ":", j1+1, true)
