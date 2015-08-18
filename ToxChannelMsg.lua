@@ -18,6 +18,7 @@ ToxChannelMsg.__index = ToxChannelMsg
 function ToxChannelMsg.new(self)
    self.data_nr = 0
    self.cdata = self.tox.cdata
+   self.transfers = {}
    self.funs = {}
    self.return_cb = {}
    self.returning_funs = {}
@@ -53,52 +54,57 @@ function ToxChannelMsg:channel_data(name, data)
       while j < #data do
          local chunk = string.format("~~%x:%x:", nr,n)
          local sendlen = self.chunk_max_len - #chunk
-         self:send_chunk(chunk .. string.sub(data, j, j + sendlen))
+         self:send_chunk(chunk .. string.sub(data, j, j + sendlen - 1))
          j = j + sendlen
          n = n + 1
       end
       -- The number, so we can get them all.
-      self:send_chunk(string.format("~~%x:N=%x:%s", nr, n, name))
+      self:send_chunk(string.format("~~%x:N=%x", nr, n))
    else  -- Just send it.
       self:send_chunk(header .. data)
    end
    return nr
 end
 
+function ToxChannelMsg:check_got_chunks(nr, chunks)
+   if chunks.n and chunks.n == chunks.got_cnt then
+      -- Have it all, put it together, can call it.
+      local data = chunks[0] .. table.concat(chunks)
+      local j = string.find(data, ":", 1, true)
+      local name = string.sub(data, 0, j-1)
+      local fun = self.data_cb[name]
+      if fun then  -- If has function, get it.
+         fun(self, nr, string.sub(data, j+1))
+      end
+      -- clean up.
+      self.transfers[nr] = nil
+   end
+end
+
 -- TODO annoying they're mostly getting at the same data..
 function ToxChannelMsg:cb_chunk(data)
    if string.find(data, "^~~[%x]+:N=[%x]+$") then  -- Length indicator
       local j1 = string.find(data, ":", 1, true)
-      local _, j2 = string.find(data, ":N=", j1+1, true)
 
-      local nr = tonumber(string.sub(data, 2, j1-1), 16)
+      local nr = tonumber(string.sub(data, 3, j1-1), 16)
       local chunks = self.transfers[nr] or {}
       self.transfers[nr] = chunks
 
-      chunks.n = tonumber(string.sub(data, j2+1), 16)
+      chunks.n = tonumber(string.sub(data, j1+3), 16)
+      self:check_got_chunks(nr, chunks)
    elseif string.find(data, "^~~[%x]+:[%x]+:") then
       local j1 = string.find(data, ":", 1, true)
       local j2 = string.find(data, ":", j1 + 1, true)
 
-      local nr = tonumber(string.sub(data, 2, j1-1), 16)  -- Index of the message.
+      local nr = tonumber(string.sub(data, 3, j1-1), 16)  -- Index of the message.
       local n  = tonumber(string.sub(data, j1+1, j2-1), 16) -- Index of the chunk.
 
       local chunks = self.transfers[nr] or {}
       self.transfers[nr] = chunks
       chunks.got_cnt = (chunks.got_cnt or 0) + 1
       chunks[n] = string.sub(data, j2+1)
-      if chunks.n and chunks.n == chunks.got_cnt then
-         -- Have it all, put it together, can call it.
-         local data = table.concat(chunks)
-         local j = string.find(data, ":", 1, true)
-         local name = string.sub(data, 0,j-1)
-         local fun = self.data_cb[name]
-         if fun then  -- If has function, get it.
-            fun(self, nr, string.sub(data, j+1))
-         end
-         -- clean up.
-         self.transfers[nr] = nil
-      end
+
+      self:check_got_chunks(nr, chunks)
    else
       local _, j1 = string.find(data, "^~~[%x]+:")
       local j2, j3 = string.find(data, ":", j1+1, true)
