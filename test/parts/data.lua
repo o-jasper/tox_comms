@@ -1,3 +1,7 @@
+-- Makes sure the data is received at the other end.
+
+-- Only checks the one-chunk sending.
+
 local ToxChannelMsg = require "tox_comms.ToxChannelMsg"
 
 local nr = 0

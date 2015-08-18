@@ -40,25 +40,27 @@ end
 -- Just in case one might want to change them.
 local json = require "json"
 
-ToxChannelMsg.max_len = 1372
+ToxChannelMsg.chunk_max_len = 1372
+ToxChannelMsg.send_chunk = ToxChannelMsg.send_message
 
 function ToxChannelMsg:channel_data(data, way, cb_data)
    local nr = self.data_nr + 1
    self.data_nr = nr
    local header = string.format("~~%x:%s:", nr, way)
-   if #header + #data > self.max_len then  -- Cant send at once.
---      local n, j = 0, 0
---      while j < #data do
---         local chunk = string.format("~~%x:%x", nr,n)
---         local sendlen = self.max_len - #chunk
---         self:send_message(chunk .. string.sub(data, j, j + sendlen))
---         j = j + sendlen
---         n = n + 1
---      end
+   if #header + #data > self.chunk_max_len then  -- Cant send at once.
+      local n, j = 0, 0
+      while j < #data do
+         local chunk = string.format("~~%x:%x:", nr,n)
+         local sendlen = self.chunk_max_len - #chunk
+         self:send_chunk(chunk .. string.sub(data, j, j + sendlen))
+         j = j + sendlen
+         n = n + 1
+      end
+      self:send_chunk(string.format("~~%x:N=%x", nr, n))
       -- TODO send the number of chunks in the entire thing.
-      return false  -- TODO not yet implemented
+      --return false  -- TODO not yet implemented
    else  -- Just send it.
-      self:send_message(header .. data)
+      self:send_chunk(header .. data)
    end
    return nr
 end
@@ -66,17 +68,36 @@ end
 function ToxChannelMsg:cb_message(tp, msg)
    local msg = ffi.string(msg)
    if tp == 0 then
-      if string.find(msg, "^~~[%x]+:[%x]+:") then
-         --      local j1 = string.find(msg, ":", 1, true)
-         --      local j2 = string.find(msg, ":", j1 + 1, true)
-         --      
-         --      local nr = tonumber(string.sub(msg, 2, j1-1), 16)  -- Index of the message.
-         --      local n  = tonumber(string.sub(msg, j1+1, j2-1), 16) -- Index of the chunk.
-         --      
-         --      local chunks = self.chunks[nr] or {}
-         --      self.chunks[nr] = chunks
-         --      chunks[n] = string.sub(msg, j2+1)
-         return false
+      if string.find(msg, "^~~[%x]+:N=[%x]+$") then  -- Length indicator
+         local j1 = string.find(msg, ":", 1, true)
+         local _, j2 = string.find(msg, ":N=", j1, true)
+
+         local nr = tonumber(string.sub(msg, 2, j1-1), 16)
+         local chunks = self.chunks[nr] or {}
+         self.chunks[nr] = chunks
+         
+         self.chunks.n = tonumber(string.sub(msg, j2+1), 16)
+      elseif string.find(msg, "^~~[%x]+:[%x]+:") then
+         local j1 = string.find(msg, ":", 1, true)
+         local j2 = string.find(msg, ":", j1 + 1, true)
+               
+         local nr = tonumber(string.sub(msg, 2, j1-1), 16)  -- Index of the message.
+         local n  = tonumber(string.sub(msg, j1+1, j2-1), 16) -- Index of the chunk.
+               
+         local chunks = self.chunks[nr] or {}
+         self.chunks[nr] = chunks
+         chunks[n] = string.sub(msg, j2+1)
+         if chunks.n then
+            local i = 0
+            while i < chunks.n do
+               if not chunks[i] then
+                  return  -- Don't have them all.
+               end
+               i = i + 1
+            end
+            -- Have it all, put it together, can call it.
+            fun(self, nr, table.concat(chunks))
+         end
       else
          local _, j1 = string.find(msg, "^~~[%x]+:")
          local j2, j3 = string.find(msg, ":", j1+1, true)
