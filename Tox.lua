@@ -201,6 +201,12 @@ Tox.pubkey_name = "default"
 local lfs = require "lfs"  -- Dont understand why no `os.mkdir`
 
 function Tox.new(self)
+   self = setmetatable(self, Tox)
+   self:init()
+   return self
+end
+
+function Tox:init()
    local opts = nil
    if self.savedata_file then
       if self.savedata_file == true then
@@ -220,16 +226,15 @@ function Tox.new(self)
    end
    self.cdata = raw.tox_new(opts, data, len or 0, err)
    self.friends = {}
-   local ret = setmetatable(self, Tox)
    if opts then
-      ret:friends_update()
+      self:friends_update()
    else
       if self.auto_bootstrap then
-         ret:default_bootstrap()
+         self:default_bootstrap()
       end
    end
    self:self_set_name(self.name or "(unnamed)")
-   return ret
+   return self
 end
 
 function Tox:write_savedata(to_file)
