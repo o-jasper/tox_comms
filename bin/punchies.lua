@@ -48,13 +48,12 @@ function PunchyFriend:recv_msg(msg)
          print("cmd friend_add", addr,
                comm:friend_add(addr, self.addmsg, #self.add_msg, nil))
       else
+         print("no authoritor", addr)
          friend:send_message("No authoritor")
       end
-   else
-      if self.punchy_mode and findlist(str, {"no", "stop", "au", "hurt"}) then
-         friend:send_message("Awww :'(")
-         self.punchy_mode = false
-      end
+   elseif self.punchy_mode and findlist(str, {"no", "stop", "au", "hurt"}) then
+      friend:send_message(":( Awww :'(")
+      self.punchy_mode = false
    end
 end
 
@@ -71,7 +70,10 @@ end
 function PunchyFriend:maybe_punch(msg)
    local friend = self.f
    local t = socket.gettime()
-   if not self.punchy_mode then self.next_time = t end
+   if not self.punchy_mode then
+      self.next_time = t
+      return
+   end
    while self.next_time < t do
       friend:send_message(rand_str(len))
       self.next_time = self.next_time + dt
@@ -88,14 +90,20 @@ comm:update_callback("self_connection_status",
 
 local pf = {}
 
+local function ensure_pf(friend)
+   local got = pf[friend:pubkey()]
+   if not got then
+      got = PunchyFriend.new{f=friend}
+      pf[friend:pubkey()] = got
+      friend:send_message("Punchies? :D")
+   end
+   return got
+end
+
 comm:update_friend_callback("connection_status",
                             function(self, friend, status)
-                               local got = pf[friend:pubkey()]
-                               if not got and status > 0 then
-                                  pf[friend:pubkey()] = PunchyFriend.new{f=friend}
-                                  friend:send_message("Punchies? :D")
-                               end
-                               print("friendstatus", status)
+                               ensure_pf(friend)
+                               print("friendstatus", friend:pubkey(), status)
 end)
 
 comm:update_friend_callback(
@@ -103,11 +111,9 @@ comm:update_friend_callback(
    function(self, friend, kind, msg, msg_len)
       print(self,friend, kind,msg,msg_len)
       local str = ffi.string(msg, msg_len)
-      local got = pf[friend:pubkey()]
+      local got = ensure_pf(friend)
       print("msg", got, string.sub(friend:pubkey(), 10), str)
-      if got then
-         got:recv_msg(str)
-      end
+      got:recv_msg(str)
 end)
 
 print("write_savedata", comm:write_savedata())
