@@ -79,6 +79,7 @@ local Tox = {
    TOX_FILE_ID_LENGTH = 32,
    TOX_MAX_FILENAME_LENGTH = 255,
 }
+Tox.__index  = Tox
 
 -- Copy-in either raw or 
 for k, is_raw in pairs(tox_funlist) do
@@ -140,8 +141,6 @@ Tox_ret_via_arg_no_size("self_get_address", "uint8_t[38]", nil, 38)
 function Tox:addr()
    return to_c.enhex(self:self_get_address(), 2, 38)
 end
-
-Tox.__index  = Tox
 
 function Tox_set_default_size(name, ...)
    local rawname = "_" .. name
