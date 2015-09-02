@@ -119,7 +119,7 @@ function Tox:friends_update()
    local ret, n = {}, self:self_get_friend_list_size()
    local list = ffi.new("uint32_t[?]", n)
    self:_self_get_friend_list(list)
-   local i = 0
+   local i = 0 
    while i < n do
       self.friends[list[i]] = ToxFriend.new{fid=list[i], tox=self}
       i = i + 1
@@ -190,10 +190,10 @@ local function readall(fd)
 end
 
 function Tox:default_bootstrap()
-   -- TODO this is a random one. Use a list and try them randomly.
-   self:bootstrap("54.199.139.199", 33445,
-                  "951C88B7E75C867418ACDB5D273821372BB5BD652740BCDF623A4FA293E75D2F",
-                  nil)
+   local option_list = require "tox_comms.data.settings"
+   local use = option_list[math.random(#option_list)]
+   -- TODO is this sufficient? No need to keep trying?
+   self:bootstrap(use.address, tonumber(use.port), use.userId, nil)
 end
 
 Tox.pubkey_name = "default"
@@ -206,11 +206,13 @@ function Tox.new(self)
    return self
 end
 
+-- Will use the name to get the current one if needed.
 function Tox:init()
    local opts = nil
    if self.savedata_file then
       if self.savedata_file == true then
-         local dirname = os.getenv("HOME") .. "/.tox_comms/" .. self.pubkey_name
+         local dirname = self.dirname or
+            os.getenv("HOME") .. "/.tox_comms/" .. self.pubkey_name
          lfs.mkdir(dirname)
          self.savedata_file = dirname .. "/savedata"
       end
