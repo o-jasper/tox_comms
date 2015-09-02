@@ -21,6 +21,20 @@ local function dehex(str)
    return ret
 end
 
+Public.dehex = dehex
+
+function Public.enhex(arr, n, sz)
+   local ret, n = "", n or 2
+   for i = 1, sz do
+      local el = arr[i] or string.byte(arr, i)
+      for _ = 1,n do
+         ret = ret .. string.sub("0123456789ABCDEF", el%16, el%16)
+         el = math.floor(el/16)
+      end
+   end
+   return ret
+end
+
 function Public.addr(addr)
    if type(addr) == "cdata" then
       return addr

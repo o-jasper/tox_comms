@@ -138,12 +138,7 @@ Tox_ret_via_arg_no_size("self_get_secret_key")
 Tox_ret_via_arg_no_size("self_get_address", "uint8_t[38]", nil, 38)
 
 function Tox:addr()
-   local str, got = "", self:self_get_address()
-   for i = 1, #got do
-      print(got[i])
-      str = str .. tostring(tonumber(got[i]), 16)
-   end
-   return str
+   return to_c.enhex(self:self_get_address(), 2, 38)
 end
 
 Tox.__index  = Tox
