@@ -54,13 +54,17 @@ function Public.ret_via_arg(name, ctp, rawname, szname)
    end
 end
 
-function Public.ret_via_args_no_size(name, ctp, rawname)
+function Public.ret_via_args_no_size(name, ctp, rawname, sz)
    local rawname = rawname or "_" .. name
    local ctp = ctp or "uint8_t[32]"
    return function(self)
       local ret = ffi.new(ctp)
       self[rawname](self, ret)
-      return ret
+      if sz then
+         return ffi.string(ret, sz)
+      else
+         return ret
+      end
    end
 end
 

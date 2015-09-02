@@ -20,7 +20,7 @@ function Bot:ensure_friend(friend)
       local args = {}
       for k,v in pairs(self.Friend_args) do args[k] = v end
       args.friend = friend
-      args.bot = bot
+      args.bot = self
       got = self.Friend:new(args)
       self.friends[pubkey] = got
    end

@@ -31,6 +31,17 @@ function ToxFriend:pubkey()
    return ffi.string(ret, 32)
 end
 
+function ToxFriend:addr()
+   -- TODO .. how to get address?
+   local ret = ffi.new("uint8_t[32]")
+   raw.tox_friend_get_public_key(self.cdata, self.fid, ret, nil)
+   local str = ""
+   for i = 1,32 do
+      str = str .. tostring(tonumber(ret[i]), 16)
+   end
+   return str
+end
+
 function ToxFriend:name()
    local sz = raw.tox_friend_get_name_size(self.cdata, self.fid)
    local ret = ffi.new("uint8_t[?]", sz)
