@@ -12,12 +12,13 @@ end
 This.new_from_table= This.new
 
 This.cmd_help = {
-   {"get",        "[variable]         -- Gets a variable, if permissable."},
-   {"set",        "[variable] [value] -- Sets a variable, if permissable."},
+   {"get",
+    "[variable]         -- Gets a variable, if permissable.\n" ..
+       "  `.get gettable`    to see what is accessible.\n" ..
+       "  `.get permissions` to see what commands are permissible."},
+   {"set",
+    "[variable] [value] -- Sets a variable, if permissable.\n  `.get settable` to see what."},
    {"help",       "[cmd]              -- Shows help info."},
-   {"settable",   "                   -- Shows what is settable. ~same as `.get settable`"},
-   {"gettable",   "                   -- Shows what is gettable. ~same as `.get gettable`"},
-   {"permissions","                   -- Shows permissions. ~same as `.get permissions`"},
    {"addfriend",  "[addr]             -- Add another as friend.`"},
    {"speakto",    "[addr] [..text..]  -- Echo what is next into the indicated friend.`"},
    {"about",      "                   -- Some info on me."},
@@ -29,7 +30,7 @@ This.cmd_help = {
 function This:init()
    self.permissions = {
       any_cmds = true,
-      cmds = { get=true, set=true, help=true, settable=true, gettable=true, permissions=true,
+      cmds = { get=true, set=true, help=true,
                addfriend=false,
                speakto=false, about=true,
                mail=true, addr=true,
@@ -54,13 +55,14 @@ function This.cmds:help(on)
    return table.concat(ret, "\n"), access
 end
 
-local function liststr_val(ret, val, pre)
+local function liststr_val(ret, val, pre, allow)
+   if not allow then return "<not allowed>" end
    local ret = ret or {}
    if type(val) == "table" then
       local cnt = 0
       for k,v in pairs(val) do
          cnt = cnt + 1
-         liststr_val(ret, v, pre .. "." .. k)
+         liststr_val(ret, v, pre .. "." .. k, allow == true or allow[k])
       end
       if cnt == 0 then
          table.insert(ret, pre .. " = {}")
@@ -71,16 +73,6 @@ local function liststr_val(ret, val, pre)
    return ret
 end
 
-function This.cmds:settable()
-   return table.concat(liststr_val(nil, self.settable, "* "), "\n")
-end
-function This.cmds:gettable()
-   return table.concat(liststr_val(nil, self.gettable, "* "), "\n")
-end
-function This.cmds:permissions()
-   return table.concat(liststr_val(nil, self.permissions, "* "), "\n")
-end
-
 function This:cmd_get_val(str)
    local val, allow = self, self.gettable
    for _ ,el in ipairs(string_split(str, "[%s]+", false)) do
@@ -88,13 +80,13 @@ function This:cmd_get_val(str)
       if not allow then return end
       val = val[el]
    end
-   return val, true
+   return val, allow
 end
 
 function This.cmds:get(str)
-   local val, allow = self:cmd_get_val(str)
+   local val, allow = self:cmd_get_val(str or "")
    if allow then
-      return table.concat(liststr_val(nil, val, "-> .."), "\n")
+      return table.concat(liststr_val(nil, val, "-> ..", allow), "\n")
    else
       return "-> access denied"
    end
@@ -108,8 +100,14 @@ function This.cmds:set(str, val_str)
       if not allow then
          return string.format("-> Not allowed; %s, %d", el,i)
       elseif i == #sl then
-         val[el] = tonumber(val_str) or val_str
-         return "-> Success"
+         if allow ~= true then
+            return "-> Not allow endpoint"
+         elseif ({string=true, number=true})[type(val[el])] then
+            val[el] = tonumber(val_str) or val_str
+            return "-> Success"
+         else
+            return "-> Not a type you may set"
+         end
       end
       val = val[el]
    end
