@@ -15,40 +15,39 @@ local function decode(fd, meta_fun)
    return decoders[top%8](fd, floor(top/8), meta_fun or {})
 end
 
+local function decode_table(fd, cnt)
+   local ret = {}
+   for _ = 1,cnt do
+      local key = decode(fd)
+      ret[key]  = decode(fd)
+   end
+   return ret
+end
+
 decoders = {
-   [0] = function(fd, top)  -- String.
-      return fd:read(top)
+   [0] = function(fd, len)  -- String.
+      return fd:read(len)
    end,
-   [1] = function(_, top)  -- Positive integer.
-      return top
+   [1] = function(_, number)  -- Positive integer.
+      return number
    end,
-   [2] = function(_, top)  -- Negative integer.
-      return -1 * top
+   [2] = function(_, positive)  -- Negative integer.
+      return -1 * positive
    end,
    [3] = decode_positive_float,
    [4] = function(fd, top)  -- Negative float.
       return -1 * decode_positive_float(fd, top)
    end,
    
-   [5] = function(fd, top)  -- Boolean, nil, other.
-      return ({true, false, nil})[1+ top]
+   [5] = function(fd, which)  -- Boolean, nil, other.
+      return ({true, false, nil})[1+ which]
    end,
    
-   [6] = function(fd, top)  -- Table.
-      local ret, cnt = {}, top
-      for _ = 1,cnt do
-         local key = decode(fd)
-         ret[key] = decode(fd)
-      end
-      return ret
-   end,
-   [7] = function(fd, top, meta_fun)  -- Table.
-      local ret, cnt = {}, top
-      local name = fd:read(decode_uint(fd))
-      for _ = 1,cnt do
-         local key = decode(fd)
-         ret[key]  = decode(fd)
-      end
+   [6] = decode_table,
+   [7] = function(fd, cnt, meta_fun)  -- Table.
+      local name_len = decode_uint(fd)
+      local name = fd:read(name_len)
+      local ret = decode_table(fd, cnt)
       return meta_fun[key] and meta_fun[key](ret) or ret
    end,
 }
