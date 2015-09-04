@@ -1,4 +1,4 @@
-local storebin = require "mybot.storebin"
+local storebin = require "tox_comms.storebin"
 
 
 local tab = {1,2,4, 7.5,{},true,false,nil, sub={q=1,r="ska"}, ska=43}
