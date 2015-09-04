@@ -1,6 +1,6 @@
 local serial = require "tox_comms.storebin.file"
 
-local tab = {1,2,4, 7.5,{},true,false,nil, sub={q=1,r="ska"}, ska=43}
+local tab = {1,2,4, 7.5,{},true,false,nil, sub={q=1,r="ska", 1/0,-1/0}, ska=43}
 
 local file = "/tmp/lua_a"
 print("---encode---")

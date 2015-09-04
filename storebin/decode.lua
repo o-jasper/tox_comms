@@ -44,7 +44,7 @@ decoders = {
    end,
    
    [5] = function(read, which)  -- Boolean, nil, other.
-      return ({true, false, nil})[1+ which]
+      return ({true, false, nil, 1/0, -1/0})[1+ which]
    end,
    
    [6] = decode_table,

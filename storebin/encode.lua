@@ -11,6 +11,9 @@ local function encode_float(write, data)
    local sub = submerge(x)
    local y = floor(x*2^(63-sub))
 
+--   assert(abs(sub) >= 0, string.format("%s, %s, %s, %s %s",
+--                                       data, data == 1/0, data == -1/0, 2*data == data,
+--                                       data == data))
    encode_uint(write, (data < 0 and 4 or 3) + 8*(sub < 1 and 1 or 0) + 16*abs(sub))
    encode_uint(write, y)
 end
@@ -39,7 +42,11 @@ encoders = {
    end,
 
    number = function(write, data)
-      if data%1 == 0 then -- Integer
+      if data == 1/0 then
+         encode_uint(write, 5 + 8*3)
+      elseif data == -1/0 or (data~=0 and 2*data == data) or data ~= data then
+         encode_uint(write, 5 + 8*4)
+      elseif data%1 == 0 then -- Integer
          if data < 0 then
             encode_uint(write, 2 - 8*data)
          else
