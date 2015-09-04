@@ -56,11 +56,13 @@ encoders = {
 
    table = function(fd, data)
       local i, got = 1, {}  -- Figure out what goes in the list.
-      while data[i]~=nil or data[i+1] ~=nil or data[i+2] ~=nil do
-         got[i] = true
-         i = i + 1
+      if data[i] ~= nil or data[i+1] ~= nil or data[i+2] ~=nil then
+         while data[i] ~= nil or data[i+1] ~= nil or data[i+2] ~=nil do
+            got[i] = true
+            i = i + 1
+         end
+         while data[i] == nil do i = i - 1 end
       end
-      while data[i] == nil do i = i - 1 end
       local cnt = 0
       for k,v in pairs(data) do
          if not (not_key[k] or got[k]) then
