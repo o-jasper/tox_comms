@@ -2,21 +2,17 @@ local floor, abs = math.floor, math.abs
 
 local encode_uint = require "tox_comms.storebin.encode_uint"
 
---local function encode_int(fd, x)
---   encode_uint((x<2 and 1 or 0) + 2*x)
---end
-
 local function submerge(x)
    return math.ceil(math.log(x)/math.log(2))
 end
 
-local function encode_float(fd, data)
+local function encode_float(write, data)
    local x = abs(data)
    local sub = submerge(x)
    local y = floor(x*2^(63-sub))
 
-   encode_uint(fd, (data < 0 and 4 or 3) + 8*(sub < 1 and 1 or 0) + 16*abs(sub))
-   encode_uint(fd, y)
+   encode_uint(write, (data < 0 and 4 or 3) + 8*(sub < 1 and 1 or 0) + 16*abs(sub))
+   encode_uint(write, y)
 end
 
 -- 0 string
@@ -29,32 +25,32 @@ end
 
 local encoders = {}
 
-local function encode(fd, data)
-   encoders[type(data) or "nil"](fd, data)
+local function encode(write, data)
+   encoders[type(data) or "nil"](write, data)
 end
 
 local not_key = { ["nil"]=true, ["function"]=true, userdata=true, thread=true }
 
 encoders = {
-   string = function(fd, data)
+   string = function(write, data)
       assert(type(data) == "string")
-      encode_uint(fd, 0 + 8*#data)
-      fd:write(data)
+      encode_uint(write, 0 + 8*#data)
+      write(data)
    end,
 
-   number = function(fd, data)
+   number = function(write, data)
       if data%1 == 0 then -- Integer
          if data < 0 then
-            encode_uint(fd, 2 - 8*data)
+            encode_uint(write, 2 - 8*data)
          else
-            encode_uint(fd, 1 + 8*data)
+            encode_uint(write, 1 + 8*data)
          end
       elseif data then
-         encode_float(fd, data)
+         encode_float(write, data)
       end
    end,
 
-   table = function(fd, data)
+   table = function(write, data)
       local i, got = 1, {}  -- Figure out what goes in the list.
       if data[i] ~= nil or data[i+1] ~= nil or data[i+2] ~=nil then
          while data[i] ~= nil or data[i+1] ~= nil or data[i+2] ~=nil do
@@ -70,37 +66,37 @@ encoders = {
          end
       end
       if getmetatable(data) then
-         encode_uint(fd, 7 + 8*cnt)
+         encode_uint(write, 7 + 8*cnt)
          -- Put in the name too.
          local name = type(data.metatable_name) == "function" and data:metatable_name() or ""
          assert(type(name) == "string")
-         encode_uint(fd, #name)
-         fd:write(name)
+         encode_uint(write, #name)
+         write(name)
       else
-         encode_uint(fd, 6 + 8*cnt)
+         encode_uint(write, 6 + 8*cnt)
       end
-      encode_uint(fd, i)  -- Feed the list.
+      encode_uint(write, i)  -- Feed the list.
       for j = 1,i do
-         encode(fd, data[j])
+         encode(write, data[j])
       end
       
       for k,v in pairs(data) do
          if not (not_key[k] or got[k]) then
-            encode(fd, k)
-            encode(fd, v)
+            encode(write, k)
+            encode(write, v)
          end
       end
    end,
 
-   boolean = function(fd, data) encode_uint(fd, 5 + 8*(data and 0 or 1)) end,
+   boolean = function(write, data) encode_uint(write, 5 + 8*(data and 0 or 1)) end,
 
-   ["nil"] = function(fd) encode_uint(fd, 5 + 8*2) end,
+   ["nil"] = function(write) encode_uint(write, 5 + 8*2) end,
    
-   ["function"] = function(fd) encode_uint(fd, 5 + 8*3) end,
+   ["function"] = function(write) encode_uint(write, 5 + 8*3) end,
 
-   userdata = function(fd) encode_uint(fd, 5 + 8*4) end,
+   userdata = function(write) encode_uint(write, 5 + 8*4) end,
 
-   thread = function(fd) encode_uint(fd, 5 + 8*5) end,
+   thread = function(write) encode_uint(write, 5 + 8*5) end,
 }
 
 return encode

@@ -6,14 +6,14 @@ return {
       assert( may_be_nil or data ~= nil )  -- Otherwise confusionly returns nil.
       local fd = io.open(file, "w")
       if fd then
-         encode(fd, data)
+         encode(function(str) fd:write(str) end, data)
          fd:close()
       end
    end,
    decode = function(file) 
       local fd = io.open(file)
       if fd then
-         local ret = decode(fd)
+         local ret = decode(function(n) return fd:read(n) end)
          fd:close()
          return ret
       end

@@ -1,25 +1,13 @@
-local storebin = require "tox_comms.storebin"
-
+local serial = require "tox_comms.storebin.file"
 
 local tab = {1,2,4, 7.5,{},true,false,nil, sub={q=1,r="ska"}, ska=43}
 
-local json = require "json"
-
-print("---encode---")
-local fd = io.open("/tmp/lua_b", "wb")
-fd:write(json.encode(tab))
-fd:close()
-
 local file = "/tmp/lua_a"
 print("---encode---")
-local fd = io.open(file, "wb")
-storebin.encode(fd, tab)
-fd:close()
+serial.encode(file, tab)
 
 print("---decode---")
-local fd = io.open(file, "rb")
-local tab2 = storebin.decode(fd)
-fd:close()
+local tab2 = serial.decode(file)
 print(tab, tab2)
 
 local function assert_eq(a, b)
