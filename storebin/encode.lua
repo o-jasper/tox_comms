@@ -33,6 +33,8 @@ local function encode(fd, data)
    encoders[type(data) or "nil"](fd, data)
 end
 
+local not_key = { ["nil"]=true, ["function"]=true, userdata=true, thread=true }
+
 encoders = {
    string = function(fd, data)
       assert(type(data) == "string")
@@ -53,9 +55,15 @@ encoders = {
    end,
 
    table = function(fd, data)
+      local i, got = 1, {}  -- Figure out what goes in the list.
+      while data[i]~=nil or data[i+1] ~=nil or data[i+2] ~=nil do
+         got[i] = true
+         i = i + 1
+      end
+      while data[i] == nil do i = i - 1 end
       local cnt = 0
       for k,v in pairs(data) do
-         if type(k) ~= "function" and type(v) ~= "function" then
+         if not (not_key[k] or got[k]) then
             cnt = cnt + 1
          end
       end
@@ -69,8 +77,13 @@ encoders = {
       else
          encode_uint(fd, 6 + 8*cnt)
       end
+      encode_uint(fd, i)  -- Feed the list.
+      for j = 1,i do
+         encode(fd, data[j])
+      end
+      
       for k,v in pairs(data) do
-         if type(k) ~= "function" and type(v) ~= "function" then
+         if not (not_key[k] or got[k]) then
             encode(fd, k)
             encode(fd, v)
          end
@@ -79,7 +92,7 @@ encoders = {
 
    boolean = function(fd, data) encode_uint(fd, 5 + 8*(data and 0 or 1)) end,
 
-   ["nil"] = function(fd) encode_uint(fd, char(5 + 8*2)) end,
+   ["nil"] = function(fd) encode_uint(fd, 5 + 8*2) end,
    
    ["function"] = function(fd) encode_uint(fd, 5 + 8*3) end,
 

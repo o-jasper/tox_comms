@@ -16,7 +16,11 @@ local function decode(fd, meta_fun)
 end
 
 local function decode_table(fd, cnt)
+   local list_cnt = decode_uint(fd)
    local ret = {}
+   for _ = 1,list_cnt do
+      table.insert(ret, decode(fd))
+   end
    for _ = 1,cnt do
       local key = decode(fd)
       ret[key]  = decode(fd)
