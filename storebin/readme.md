@@ -9,13 +9,21 @@ the name and input table as argument.
 That way, perhaps userdata, thread, functions can be re-added by
 the provided function.
 
----
+### Compressive measures
+Probably shouldnt..
 
+#### Lists (done)
 If there is no more than two subsequent `nil`s in lists, it ist stored as
 lists, i.e. avoiding the key-value stuff.
 
 Dont rely on the allowance of `nil`s though.
 
-Recognizing sets is not pointful. Recognizing lists of low - <16 - numbers
-and lists of choices might help more.. But i dont want to go into compression..
-Afaik what is done is what is pointful.
+#### Repetative patterns
+I.e. the same string occuring a bunch. Probably just rely on compression via
+programs.
+
+#### Really small numbers
+Recognizing lists of low - <16 - numbers, or distinct options. Dont.
+
+#### Sets
+Recognizing sets is not pointful. One byte of what are probably many-byte items.
