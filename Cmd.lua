@@ -29,8 +29,9 @@ function Cmd:init()
                about=0,
       }
    }
-   self.settable = {}
-   self.gettable = { permissions = true, settable=true, gettable=true, cmd_help=true }
+   self.settable = self.settable or {}
+   self.gettable = self.gettable or
+      { permissions = true, settable=true, gettable=true, cmd_help=true }
 end
 
 Cmd.cmds = {}
@@ -80,12 +81,11 @@ end
 function Cmd.cmds:get(str)
    local val, allow = self:cmd_get_val(str or "")
    if allow then
-      return table.concat(liststr_val(nil, val, "-> ..", allow), "\n")
+      return table.concat(liststr_val(nil, val, "..", allow), "\n")
    else
       return "access denied"
    end
 end
-
 
 function Cmd.cmds:set(str, val_str)
    local sl = string_split(str)
@@ -138,28 +138,28 @@ function Cmd:msg(text) print(text) end
 
 function Cmd:on_cmd(msg)
    local name, rest = string.match(msg, "^[%s]*([%w]+)[%s]*(.*)")
-   if self.cmds[name] then
-      local perm = self.permissions.cmds[name]
-      if not perm then
-         self:msg("X> No permission to run that command")
-      elseif perm == "text" then
-         self:msg("-> " .. tostring(self.cmds[name](self, msg) or nil))
-      elseif type(perm) == "number" then
-         local args = {}
-         for _,el in ipairs(string_split(rest)) do
-            if el ~= "" then table.insert(args, el) end
-         end
-
-         if #args > perm then
-            self:msg("c> too many args %d > %d, cut rest off", #args, perm)
-         end
-         while #args > perm do table.remove(args) end
-         self:msg("-> " .. tostring(self.cmds[name](self, unpack(args)) or nil))
-      else
-         self:msg("X> permission failed on arguments.")
+   local perm = self.permissions.cmds[name]
+   if not perm then
+      self:msg("X> No permission to run that command")
+   elseif no self.cmd[name] then
+      self:msg("X> Have permission, but command not defined.")
+   elseif perm == "text" then
+      self:msg("-> " .. tostring(self.cmds[name](self, rest) or nil))
+   elseif type(perm) == "number" then
+      local args = {}
+      for _,el in ipairs(string_split(rest)) do
+         if el ~= "" then table.insert(args, el) end
       end
-      return true
+
+      if #args > perm then
+         self:msg("c> too many args %d > %d, cut rest off", #args, perm)
+      end
+      while #args > perm do table.remove(args) end
+         self:msg("-> " .. tostring(self.cmds[name](self, unpack(args)) or nil))
+   else
+      self:msg("X> permission failed on arguments.")
    end
+   return true
 end
 
 return Cmd
