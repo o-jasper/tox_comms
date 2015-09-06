@@ -38,6 +38,7 @@ cmd_help("speakto",    "[addr] [..text..]  -- Echo what is next into the indicat
 cmd_help("mail",       "[..text...]        -- Send \"mail\", only for comments about the bot.")
 cmd_help("addr",       "                   -- Tell the address of the bot.")
 cmd_help("stop",       "                   -- Stops the bot.")
+cmd_help("note",       "[..text...]        -- Leave a note at the bot(setting overwrites)")
 
 function This:init()
    --assert(getmetatable(self).__index)--.permissions)
@@ -48,10 +49,14 @@ function This:init()
                speakto = false, about=0,
                mail="text", addr=0,
                friend_list = false,
+               note="text",
       }
    }
-   self.settable = {}
-   self.gettable = { permissions = true, settable=true, gettable=true, cmd_help=true }
+   self.settable = { note_left=true }
+   self.gettable = {
+      permissions = true, settable=true, gettable=true, cmd_help=true,
+      addr = true, note_left=true,
+   }
 end
 
 function This.cmds:friendadd(addr, msg)
@@ -108,6 +113,14 @@ end
 function This.cmds:mail()
    return "Not yet implemented"
 end
+function This.cmds:note(text)
+   if not text or text == "" then
+      return "Current note is:\n" .. self.note_left
+   else
+      self.note_left = text
+      return "Made note"
+   end
+end
 function This.cmds:stop()
    return "Not yet implemented"
 end
@@ -146,14 +159,25 @@ function This:on_status_message(msg)
                (perms.any_cmds and perms.cmds.help and " Use .help for options." or ""))
    end
    print("status_msg", msg)
-   self.status_msg = string.sub(msg, This.max_namelen)
+   self.status_msg = string.sub(msg, self.max_namelen)
 end
 function This:on_name(name)
-   self.name = string.sub(name, This.max_namelen)
+   self.name = string.sub(name, self.max_namelen)
 end
 
+function This:export_table()
+   return {
+      addr = self.addr, said_hello = self.said_hello,
+      permissions=self.permissions, left_note=self.left_note
+   }
+end
+
+local serial = require "tox_comms.storebin.file"
 function This:save()
-   -- Nothing, defaultly.
+   self.dir = self.dir or (self.bot.dir .. "/" .. self.addr .. "/")
+   os.execute("mkdir -p " .. self.dir)
+
+   serial.encode(self.dir .. "self.state", self:export_table())
 end
 
 return This

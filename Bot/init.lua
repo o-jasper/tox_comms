@@ -1,3 +1,10 @@
+--  Copyright (C) 06-09-2015 Jasper den Ouden.
+--
+--  This is free software: you can redistribute it and/or modify
+--  it under the terms of the GNU General Public License as published
+--  by the Free Software Foundation, either version 3 of the License, or
+--  (at your option) any later version.
+
 local ffi = require "ffi"
 local Tox = require "tox_comms.Tox"
 
@@ -22,6 +29,7 @@ function Bot:ensure_friend(friend)
          for k,v in pairs(self.Friend_args) do args[k] = v end
          args.friend = friend
          args.bot = self
+         args.addr = addr
          got = self.Friend:new(args)
          self.friends[addr] = got
       end
@@ -44,8 +52,6 @@ end
 
 Bot.savedata_file = true
 Bot.auto_bootstrap = true
-
-local serial = require "tox_comms.storebin.file"
 
 local function proper_io_lines(file)
    local fd = io.open(file)
@@ -113,7 +119,9 @@ function Bot:init()
 end
 
 function Bot:save()
+   -- Savedata.
    self.tox:write_savedata()
+   -- Friend list.
    local fd = io.open(self.dir .. "friend_addr.txt", "w")
    for addr, fr in pairs(self.friends) do
       fd:write(addr .. "\n")
