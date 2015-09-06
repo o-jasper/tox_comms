@@ -34,8 +34,10 @@ end
 function ToxFriend:addr()
    -- TODO .. how to get address?
    local ret = ffi.new("uint8_t[32]")
-   raw.tox_friend_get_public_key(self.cdata, self.fid, ret, nil)
-   return to_c.enhex(ret, 2, 32)
+   local got = raw.tox_friend_get_public_key(self.cdata, self.fid, ret, nil)
+   if got then
+      return to_c.enhex(ret, 32)
+   end
 end
 
 function ToxFriend:name()

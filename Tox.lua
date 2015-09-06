@@ -139,7 +139,7 @@ Tox_ret_via_arg_no_size("self_get_secret_key")
 Tox_ret_via_arg_no_size("self_get_address", "uint8_t[38]", nil, 38)
 
 function Tox:addr()
-   return to_c.enhex(self:self_get_address(), 2, 38)
+   return to_c.enhex(self:self_get_address(), 38)
 end
 
 function Tox_set_default_size(name, ...)

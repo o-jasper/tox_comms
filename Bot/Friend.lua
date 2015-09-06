@@ -19,21 +19,23 @@ This.cmd_help = {
    {"set",
     "[variable] [value] -- Sets a variable, if permissable.\n  `.get settable` to see what."},
    {"help",       "[cmd]              -- Shows help info."},
-   {"addfriend",  "[addr]             -- Add another as friend.`"},
+   {"friendadd",  "[addr]             -- Add another as friend.`"},
    {"speakto",    "[addr] [..text..]  -- Echo what is next into the indicated friend.`"},
    {"about",      "                   -- Some info on me."},
-   {"mail",       "[..text...]        -- Send \"mail\" TODO implement"},
+   {"mail",       "[..text...]        -- Send \"mail\", only for comments about the bot."},
    {"addr",       "                   -- Tell the address of the bot."},
-   {"stop",       "                   "},
+   {"stop",       "                   -- Stops the bot."},
 }
 
 function This:init()
-   self.permissions = {
+   --assert(getmetatable(self).__index)--.permissions)
+   self.permissions = self.permissions or {
       any_cmds = true,
       cmds = { get=true, set=true, help=true,
-               addfriend=false,
+               friendadd=false,
                speakto=false, about=true,
                mail=true, addr=true,
+               friend_list = false,
       }
    }
    self.settable = {}
@@ -88,7 +90,7 @@ function This.cmds:get(str)
    if allow then
       return table.concat(liststr_val(nil, val, "-> ..", allow), "\n")
    else
-      return "-> access denied"
+      return "access denied"
    end
 end
 
@@ -98,34 +100,51 @@ function This.cmds:set(str, val_str)
    for i, el in ipairs(sl) do
       allow = (allow == true) or allow[el]
       if not allow then
-         return string.format("-> Not allowed; %s, %d", el,i)
+         return string.format("Not allowed; %s, %d", el,i)
       elseif i == #sl then
-         if allow ~= true then
-            return "-> Not allow endpoint"
-         elseif ({string=true, number=true})[type(val[el])] then
-            val[el] = tonumber(val_str) or val_str
-            return "-> Success"
+         if type(allow) ~= "string" then
+            return "Not allow endpoint"
+         elseif allow == "string" then
+            val[el] = val_str
+            return "Success"
+         elseif allow == "number" then
+            local x = tonumber(val_str)
+            if x then
+               val[el] = x
+               return "Success"
+            else
+               return "Only number allowed here."
+            end
+         elseif allow == "boolean" then
+            if val_str == "true" or val_str == "1" then
+               val[el] = true
+            elseif val_str == "false" or val_str == "nil" then
+               val[el] = false
+            else
+               return "Only boolean allowed here"
+            end
+            return "Success"
          else
-            return "-> Not a type you may set"
+            return "Possibly incorrect allow?"
          end
       end
       val = val[el]
    end
 end
 
-function This.cmds:addfriend(addr, msg)
-   local perm = self.permissions.addfriend
+function This.cmds:friendadd(addr, msg)
+   local perm = self.permissions.friendadd
    if perm then
       local add_msg = "I am a bot, was asked to add you."
-      if perm == "name_friend" then
+      if perm == "name_origin" then
          add_msg = add_msg .. " From: " .. self.friend:addr()
-      elseif type(perm) == "table" then
-         return "-> this sort of permission not yet implemented.(thus denied)"
+      else
+         return "Dont recognize " .. tostring(perm) .. " as permission."
       end
       self.self.tox:friend_add(addr,  add_msg, #add_msg)
-      return "-> added"
+      return "added"
    else
-      return "-> you do not have the permissions for that."
+      return "you do not have the permissions for that."
    end
 end
 
@@ -136,18 +155,18 @@ function This.cmds:speakto(addr, ...)
       if perm == "name_friend" then
          add_msg = add_msg .. " From: " .. self.friend:addr()
       elseif type(perm) == "table" then
-         return "-> this sort of permission not yet implemented.(thus denied)"
+         return "this sort of permission not yet implemented.(thus denied)"
       end
       local friend = self.bot.friends[addr]
       if friend then
          friend:send_message(table.concat({...}, " "))
-         return "-> msg sent"
+         return "msg sent"
       else
-         return "-> have to add the friend first"
+         return "have to add the friend first"
       end   
       --self.self.tox:friend_add(addr,  add_msg, #add_msg)
    else
-      return "-> you do not have the permissions for that."
+      return "you do not have the permissions for that."
    end
 end
 
@@ -165,7 +184,18 @@ function This.cmds:addr()
 end
 
 function This.cmds:mail()
-   return "-> Not yet implemented"
+   return "Not yet implemented"
+end
+function This.cmds:stop()
+   return "Not yet implemented"
+end
+
+function This.cmds:friends_list()
+   local ret = {}
+   for addr, friend in pairs(self.bot.friends) do
+      table.insert(ret, string.format("%s; %s", friend.assured_name or friend.name, addr))
+   end
+   return table.concat(ret, "\n")
 end
 
 function This:msg(text)
@@ -178,14 +208,15 @@ function This:on_cmd_msg(msg)
    table.remove(args, 1)
    if self.cmds[name] then
       if self.permissions.cmds[name] == true then
-         self:msg(self.cmds[name](self, unpack(args)))
+         self:msg("-> " ..tostring(self.cmds[name](self, unpack(args)) or nil))
+      else
+         self:msg("No permission to run that command")
       end
       return true
    end
 end
 
 function This:on_message(kind, msg)
-   print("msg", kind, msg, string.sub(msg, 1,1))
    if string.sub(msg, 1, 1) == "." then
       if self.permissions.any_cmds then
          return self:on_cmd_msg(string.sub(msg, 2))
@@ -210,8 +241,11 @@ function This:on_status_message(msg)
    self.status_msg = string.sub(msg, This.max_namelen)
 end
 function This:on_name(name)
-   print("name:", name)
-   --self.name = string.sub(name, This.max_namelen)
+   self.name = string.sub(name, This.max_namelen)
+end
+
+function This:save()
+   -- Nothing, defaultly.
 end
 
 return This

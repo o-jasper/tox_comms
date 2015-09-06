@@ -15,25 +15,30 @@ end
 
 function Bot:ensure_friend(friend)
    local addr = friend:addr()
-   local got = self.friends[addr]
-   print("ensuring friend", addr, got)
-   if not got then
-      local args = {}
-      for k,v in pairs(self.Friend_args) do args[k] = v end
-      args.friend = friend
-      args.bot = self
-      got = self.Friend:new(args)
-      self.friends[addr] = got
+   if addr then
+      local got = self.friends[addr]
+      if not got then
+         local args = {}
+         for k,v in pairs(self.Friend_args) do args[k] = v end
+         args.friend = friend
+         args.bot = self
+         got = self.Friend:new(args)
+         self.friends[addr] = got
+      end
+      self.friend_not_done_fids[friend.fid] = nil
+      return got
+   else
+      self.friend_not_done_fids[friend.fid] = true
+      return false
    end
-   return got
 end
 
 function Bot:friend_add(addr, add_msg)
-   print(addr)
+   print("fa", addr)
    return self:ensure_friend(self.tox:friend_add(addr, add_msg, #add_msg, nil))
 end
 function Bot:friend_add_norequest(addr)
-   print(addr)
+   print("far", addr)
    return self:ensure_friend(self.tox:friend_add_norequest(addr))
 end
 
@@ -75,7 +80,8 @@ function Bot:init()
          self:friend_add_norequest(addr)
       end
    end
-   
+   self.friend_not_done_fids = {}
+
    if self.status_message then
       tox:set_status_message(self.status_message)
    end
@@ -114,6 +120,19 @@ function Bot:save()
       fr:save()
    end
    fd:close()
+end
+
+function Bot:iterate()
+   self.tox:iterate()
+   for fid, v in pairs(self.friend_not_done_fids) do
+      if v == true then
+         if self:ensure_friend(self.tox.friends[fid]) then
+            self.friend_not_done_fids[fid] = nil
+         end
+      elseif v ~= nil then  --dont expect nil either, but..
+         error("Didnt expect non-true?")
+      end
+   end
 end
 
 return Bot
