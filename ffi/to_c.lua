@@ -28,10 +28,11 @@ function Public.enhex(arr, n, sz)
    for i = 1, sz do
       local el = arr[i] or string.byte(arr, i)
       for _ = 1,n do
-         ret = ret .. string.sub("0123456789ABCDEF", el%16, el%16)
+         ret = ret .. string.sub("0123456789ABCDEF", 1 + el%16, 1 + el%16)
          el = math.floor(el/16)
       end
    end
+   assert(#ret == n*sz)
    return ret
 end
 
@@ -46,7 +47,8 @@ function Public.addr(addr)
 end
 
 function Public.str(str, tp)
-   assert(type(str) == "string")
+   assert(type(str) == "string",
+          string.format("String to create not a string, but %s (%s)", type(str), str))
    local i, ret = 0, ffi.new(tp or "uint8_t[?]", #str)
    while i < #str do
       ret[i] = string.byte(str, i + 1)
