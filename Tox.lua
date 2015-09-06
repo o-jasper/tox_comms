@@ -87,7 +87,7 @@ for k, is_raw in pairs(tox_funlist) do
    Tox[is_raw and "_" .. k or k] = function(self, ...) return fun(self.cdata, ...) end
 end
 
-function Tox._add_friend_fid(self, fid)
+function Tox._friend_add_fid(self, fid)
    local friend = ToxFriend.new{fid=fid, tox=self}
    self.friends[fid] = friend
    return friend
@@ -96,18 +96,18 @@ end
 function Tox.friend_add(self, addr, comment)
    local addr, _comment = to_c.addr(addr), to_c.str(comment)
    local fid = raw.tox_friend_add(self.cdata, addr, _comment, #comment, nil)
-   return self:_add_friend_fid(fid)
+   return self:_friend_add_fid(fid)
 end
 
 function Tox.friend_add_norequest(self, addr)
    local addr = to_c.addr(addr)
    local fid = raw.tox_friend_add_norequest(self.cdata, addr, nil)
-   return self:_add_friend_fid(fid)
+   return self:_friend_add_fid(fid)
 end
 
 function Tox.friend_by_pubkey(pubkey)
    local fid = tox_friend_by_public_key(self.cdata, to_c.addr(pubkey))
-   return self.friends[fid] or self:_add_friend_fid(fid)
+   return self.friends[fid] or self:_friend_add_fid(fid)
 end
 
 -- Functions that use a pointer now just return.
