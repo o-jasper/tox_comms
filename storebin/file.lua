@@ -15,7 +15,7 @@ return {
       if fd then
          local ret = decode(function(n) return fd:read(n) end)
          fd:close()
-         return ret
+         return ret, true
       end
    end,
 }
