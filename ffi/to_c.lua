@@ -23,16 +23,13 @@ end
 
 Public.dehex = dehex
 
-function Public.enhex(arr, n, sz)
-   local ret, n = "", n or 2
+function Public.enhex(arr, sz)
+   local ret = ""
    for i = 1, sz do
-      local el = arr[i] or string.byte(arr, i)
-      for _ = 1,n do
-         ret = ret .. string.sub("0123456789ABCDEF", 1 + el%16, 1 + el%16)
-         el = math.floor(el/16)
-      end
+      local el = arr[i - 1] or string.byte(arr, i)
+      local x, y = 1 + el%16, 1 + math.floor(el/16)
+      ret = ret .. string.sub("0123456789ABCDEF", y,y) .. string.sub("0123456789ABCDEF", x,x)
    end
-   assert(#ret == n*sz)
    return ret
 end
 
