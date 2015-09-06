@@ -37,19 +37,22 @@ cmd_help("friendadd",  "[addr]             -- Add another as friend.`")
 cmd_help("speakto",    "[addr] [..text..]  -- Echo what is next into the indicated friend.`")
 cmd_help("mail",       "[..text...]        -- Send \"mail\", only for comments about the bot.")
 cmd_help("addr",       "                   -- Tell the address of the bot.")
-cmd_help("stop",       "                   -- Stops the bot.")
+
 cmd_help("note",       "[..text...]        -- Leave a note at the bot(setting overwrites)")
+cmd_help("stop",       "                   -- Stops the bot.")
+cmd_help("save",       "                   -- Make it save everything.")
 
 function This:init()
    --assert(getmetatable(self).__index)--.permissions)
    self.permissions = self.permissions or {
       any_cmds = true,
-      cmds = { get=1, set=2, help=1,
+      cmds = { get = 1, set = 2, help = 1,
                friendadd = false,
-               speakto = false, about=0,
-               mail="text", addr=0,
+               speakto = false, about = 0,
+               mail = "text", addr = 0,
                friend_list = false,
-               note="text",
+               note = "text",
+               save = false
       }
    }
    self.settable = { note_left=true }
@@ -131,6 +134,11 @@ function This.cmds:friends_list()
       table.insert(ret, string.format("%s; %s", friend.assured_name or friend.name, addr))
    end
    return table.concat(ret, "\n")
+end
+
+function This.cmds:save()
+   self.bot:save()
+   return "Saved stuff"
 end
 
 function This:msg(text)
