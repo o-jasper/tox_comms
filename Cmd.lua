@@ -50,9 +50,9 @@ function Cmd.cmds:help(on)
    return table.concat(ret, "\n"), access
 end
 
-function Cmd:cmd_get_val(str)
+function Cmd:cmd_get_val(var)
    local val, allow = self, self.gettable
-   for _ ,el in ipairs(string_split(str, "[%s]+", false)) do
+   for _ ,el in ipairs(string_split(var, ".")) do
       allow = (allow == true) or allow[el]
       if not allow then return end
       val = val[el]
@@ -78,8 +78,10 @@ local function liststr_val(ret, val, pre, allow)
    return ret
 end
 
-function Cmd.cmds:get(str)
-   local val, allow = self:cmd_get_val(str or "")
+Cmd.liststr_val = liststr_val
+
+function Cmd.cmds:get(var)
+   local val, allow = self:cmd_get_val(var or "")
    if allow then
       return table.concat(liststr_val(nil, val, "..", allow), "\n")
    else
@@ -87,8 +89,8 @@ function Cmd.cmds:get(str)
    end
 end
 
-function Cmd.cmds:set(str, val_str)
-   local sl = string_split(str)
+function Cmd.cmds:set(var, val_str)
+   local sl = string_split(var, ".")
    local val, allow = self, self.settable
    for i, el in ipairs(sl) do
       allow = (allow == true) or allow[el]
@@ -141,7 +143,7 @@ function Cmd:on_cmd(msg)
    local perm = self.permissions.cmds[name]
    if not perm then
       self:msg("X> No permission to run that command")
-   elseif no self.cmd[name] then
+   elseif not self.cmds[name] then
       self:msg("X> Have permission, but command not defined.")
    elseif perm == "text" then
       self:msg("-> " .. tostring(self.cmds[name](self, rest) or nil))
