@@ -14,46 +14,67 @@ function Bot:new(new)
 end
 
 function Bot:ensure_friend(friend)
-   local pubkey = friend:pubkey()
-   local got = self.friends[pubkey]
+   local addr = friend:addr()
+   local got = self.friends[addr]
+   print("ensuring friend", addr, got)
    if not got then
       local args = {}
       for k,v in pairs(self.Friend_args) do args[k] = v end
       args.friend = friend
       args.bot = self
       got = self.Friend:new(args)
-      self.friends[pubkey] = got
+      self.friends[addr] = got
    end
    return got
+end
+
+function Bot:friend_add(addr, add_msg)
+   print(addr)
+   return self:ensure_friend(self.tox:friend_add(addr, add_msg, #add_msg, nil))
+end
+function Bot:friend_add_norequest(addr)
+   print(addr)
+   return self:ensure_friend(self.tox:friend_add_norequest(addr))
 end
 
 Bot.savedata_file = true
 Bot.auto_bootstrap = true
 
-local fjson = require "tox_comms.util.fjson"
+local serial = require "tox_comms.storebin.file"
 
-function Bot:load_friends()
-   self.friends = fjson.decode(self.dir .. "friends.json") or {}
-   for i, el in ipairs(self.friends) do
-      self.friends[i] = self.Friend:new_from_table(self.el)
+local function proper_io_lines(file)
+   local fd = io.open(file)
+   if fd then
+      fd:close()
+      return io.lines(file)
+   else
+      return ipairs({}) -- F*ck it.
    end
 end
 
 Bot.name = "default"
-function Bot:init()
-   self.dir = self.dir or os.getenv("HOME") .. "/.mybot/" .. self.name .. "/"
-   os.execute("mkdir -p " .. self.dir)
 
-   if not self.friends then
-      self:load_friends()
-   end
-
-   local tox = Tox.new{ 
+function Bot:init_tox()
+   self.tox = Tox.new {
       dirname = self.dir .. "/tox/",
       name = "bot_" .. self.name, pubkey_name="bot_" .. self.name,
       savedata_file=self.savedata_file, auto_bootstrap=self.auto_bootstrap
    }
-   self.tox = tox
+   return self.tox
+end
+
+function Bot:init()
+   self.dir = self.dir or os.getenv("HOME") .. "/.mybot/" .. self.name .. "/"
+   os.execute("mkdir -p " .. self.dir)
+
+   local tox = self:init_tox()
+
+   if not self.friends then
+      self.friends = {}
+      for addr in proper_io_lines(self.dir .. "friend_addr.txt") do
+         self:friend_add_norequest(addr)
+      end
+   end
    
    if self.status_message then
       tox:set_status_message(self.status_message)
@@ -87,7 +108,12 @@ end
 
 function Bot:save()
    self.tox:write_savedata()
-   fjson.encode(self.dir .. "friends.json", self.friends)
+   local fd = io.open(self.dir .. "friend_addr.txt", "w")
+   for addr, fr in pairs(self.friends) do
+      fd:write(addr .. "\n")
+      fr:save()
+   end
+   fd:close()
 end
 
 return Bot
