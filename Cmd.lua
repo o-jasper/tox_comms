@@ -134,16 +134,29 @@ https://github.com/o-jasper/tox_comms]]
    return ret
 end
 
+function Cmd:msg(text) print(text) end
+
 function Cmd:on_cmd(msg)
-   local args = string_split(msg)
-   local name = args[1]
-   table.remove(args, 1)
+   local name, rest = string.match(msg, "^[%s]*([%w]+)[%s]*(.*)")
    if self.cmds[name] then
       local perm = self.permissions.cmds[name]
-      if perm and type(perm) == "number" and #args <= perm then
+      if not perm then
+         self:msg("X> No permission to run that command")
+      elseif perm == "text" then
+         self:msg("-> " .. tostring(self.cmds[name](self, msg) or nil))
+      elseif type(perm) == "number" then
+         local args = {}
+         for _,el in ipairs(string_split(rest)) do
+            if el ~= "" then table.insert(args, el) end
+         end
+
+         if #args > perm then
+            self:msg("c> too many args %d > %d, cut rest off", #args, perm)
+         end
+         while #args > perm do table.remove(args) end
          self:msg("-> " .. tostring(self.cmds[name](self, unpack(args)) or nil))
       else
-         self:msg("No permission to run that command")
+         self:msg("X> permission failed on arguments.")
       end
       return true
    end

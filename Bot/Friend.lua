@@ -9,6 +9,12 @@ local Cmd = require "tox_comms.Cmd"
 
 local This = {}
 for k,v in pairs(Cmd) do This[k] = v end
+--  Copyright (C) 06-09-2015 Jasper den Ouden.
+--
+--  This is free software: you can redistribute it and/or modify
+--  it under the terms of the GNU General Public License as published
+--  by the Free Software Foundation, either version 3 of the License, or
+--  (at your option) any later version.
 
 This.cmds = {}
 for k,v in pairs(Cmd.cmds) do This.cmds[k] = v end
@@ -40,7 +46,7 @@ function This:init()
       cmds = { get=1, set=2, help=1,
                friendadd = false,
                speakto = false, about=0,
-               mail=128, addr=0,
+               mail="text", addr=0,
                friend_list = false,
       }
    }

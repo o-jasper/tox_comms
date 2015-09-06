@@ -1,6 +1,6 @@
 local function string_split(str, split_by, simple)
    simple = simple == nil or simple
-   split_by = split_by or " "
+   split_by = split_by or "[%s]"
    local list = {}
    local f, t
    while true do
