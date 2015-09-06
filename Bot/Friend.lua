@@ -1,6 +1,22 @@
-local string_split = require "tox_comms.util.string_split"
+--  Copyright (C) 06-09-2015 Jasper den Ouden.
+--
+--  This is free software: you can redistribute it and/or modify
+--  it under the terms of the GNU General Public License as published
+--  by the Free Software Foundation, either version 3 of the License, or
+--  (at your option) any later version.
+
+local Cmd = require "tox_comms.Cmd"
 
 local This = {}
+for k,v in pairs(Cmd) do This[k] = v end
+
+This.cmds = {}
+for k,v in pairs(Cmd.cmds) do This.cmds[k] = v end
+
+This.cmd_help = {}
+local function cmd_help(...) table.insert(This.cmd_help, {...}) end
+for _,el in ipairs(Cmd.cmd_help) do cmd_help(unpack(el)) end
+
 This.__index = This
 
 function This:new(new)
@@ -11,125 +27,25 @@ end
 
 This.new_from_table= This.new
 
-This.cmd_help = {
-   {"get",
-    "[variable]         -- Gets a variable, if permissable.\n" ..
-       "  `.get gettable`    to see what is accessible.\n" ..
-       "  `.get permissions` to see what commands are permissible."},
-   {"set",
-    "[variable] [value] -- Sets a variable, if permissable.\n  `.get settable` to see what."},
-   {"help",       "[cmd]              -- Shows help info."},
-   {"friendadd",  "[addr]             -- Add another as friend.`"},
-   {"speakto",    "[addr] [..text..]  -- Echo what is next into the indicated friend.`"},
-   {"about",      "                   -- Some info on me."},
-   {"mail",       "[..text...]        -- Send \"mail\", only for comments about the bot."},
-   {"addr",       "                   -- Tell the address of the bot."},
-   {"stop",       "                   -- Stops the bot."},
-}
+cmd_help("friendadd",  "[addr]             -- Add another as friend.`")
+cmd_help("speakto",    "[addr] [..text..]  -- Echo what is next into the indicated friend.`")
+cmd_help("mail",       "[..text...]        -- Send \"mail\", only for comments about the bot.")
+cmd_help("addr",       "                   -- Tell the address of the bot.")
+cmd_help("stop",       "                   -- Stops the bot.")
 
 function This:init()
    --assert(getmetatable(self).__index)--.permissions)
    self.permissions = self.permissions or {
       any_cmds = true,
-      cmds = { get=true, set=true, help=true,
-               friendadd=false,
-               speakto=false, about=true,
-               mail=true, addr=true,
+      cmds = { get=1, set=2, help=1,
+               friendadd = false,
+               speakto = false, about=0,
+               mail=128, addr=0,
                friend_list = false,
       }
    }
    self.settable = {}
    self.gettable = { permissions = true, settable=true, gettable=true, cmd_help=true }
-end
-
-This.cmds = {}
-function This.cmds:help(on)
-   local ret, access = {}, false
-   local function ins(name, str, ...)
-      if (not on or on == name) and self.permissions.cmds[name] then
-         access = on
-         table.insert(ret, string.format(".%s " .. str, name, ...))
-      end
-   end
-   if not on then table.insert(ret, "Commands:(only permitted shown)") end
-   for _, el in pairs(self.cmd_help) do ins(unpack(el)) end
-
-   return table.concat(ret, "\n"), access
-end
-
-local function liststr_val(ret, val, pre, allow)
-   if not allow then return "<not allowed>" end
-   local ret = ret or {}
-   if type(val) == "table" then
-      local cnt = 0
-      for k,v in pairs(val) do
-         cnt = cnt + 1
-         liststr_val(ret, v, pre .. "." .. k, allow == true or allow[k])
-      end
-      if cnt == 0 then
-         table.insert(ret, pre .. " = {}")
-      end
-   else
-      table.insert(ret, pre .. " = " .. tostring(val))
-   end
-   return ret
-end
-
-function This:cmd_get_val(str)
-   local val, allow = self, self.gettable
-   for _ ,el in ipairs(string_split(str, "[%s]+", false)) do
-      allow = (allow == true) or allow[el]
-      if not allow then return end
-      val = val[el]
-   end
-   return val, allow
-end
-
-function This.cmds:get(str)
-   local val, allow = self:cmd_get_val(str or "")
-   if allow then
-      return table.concat(liststr_val(nil, val, "-> ..", allow), "\n")
-   else
-      return "access denied"
-   end
-end
-
-function This.cmds:set(str, val_str)
-   local sl = string_split(str)
-   local val, allow = self, self.settable
-   for i, el in ipairs(sl) do
-      allow = (allow == true) or allow[el]
-      if not allow then
-         return string.format("Not allowed; %s, %d", el,i)
-      elseif i == #sl then
-         if type(allow) ~= "string" then
-            return "Not allow endpoint"
-         elseif allow == "string" then
-            val[el] = val_str
-            return "Success"
-         elseif allow == "number" then
-            local x = tonumber(val_str)
-            if x then
-               val[el] = x
-               return "Success"
-            else
-               return "Only number allowed here."
-            end
-         elseif allow == "boolean" then
-            if val_str == "true" or val_str == "1" then
-               val[el] = true
-            elseif val_str == "false" or val_str == "nil" then
-               val[el] = false
-            else
-               return "Only boolean allowed here"
-            end
-            return "Success"
-         else
-            return "Possibly incorrect allow?"
-         end
-      end
-      val = val[el]
-   end
 end
 
 function This.cmds:friendadd(addr, msg)
@@ -202,24 +118,10 @@ function This:msg(text)
    self.friend:send_message(text)
 end
 
-function This:on_cmd_msg(msg)
-   local args = string_split(msg)
-   local name = args[1]
-   table.remove(args, 1)
-   if self.cmds[name] then
-      if self.permissions.cmds[name] == true then
-         self:msg("-> " ..tostring(self.cmds[name](self, unpack(args)) or nil))
-      else
-         self:msg("No permission to run that command")
-      end
-      return true
-   end
-end
-
 function This:on_message(kind, msg)
    if string.sub(msg, 1, 1) == "." then
       if self.permissions.any_cmds then
-         return self:on_cmd_msg(string.sub(msg, 2))
+         return self:on_cmd(string.sub(msg, 2))
       end
    end
 end
