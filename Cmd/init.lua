@@ -1,4 +1,4 @@
---  Copyright (C) 06-09-2015 Jasper den Ouden.
+--  Copyright (C) 07-09-2015 Jasper den Ouden.
 --
 --  This is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published
@@ -77,10 +77,10 @@ end
 function Cmd:msg(text) print(text) end
 
 function Cmd:on_cmd(msg)
-   local name, rest = string.match(msg, "^[%s]*([%w]+)[%s]*(.*)")
+   local name, rest = string.match(msg, "^[%s]*([%w_]+)[%s]*(.*)")
    local perm = self.permissions.cmds[name]
    if not perm then
-      self:msg("X> No permission to run that command")
+      self:msg(string.format("X> No permission to run that command (%q:%s)", name, perm))
    elseif not self.cmds[name] then
       self:msg("X> Have permission, but command not defined.")
    elseif perm == "text" then
