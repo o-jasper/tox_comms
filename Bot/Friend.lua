@@ -44,7 +44,11 @@ cmd_help("stop",       "                   -- Stops the bot.")
 cmd_help("save",       "                   -- Make it save everything.")
 
 cmd_help("friend_edit","[friend addr]      -- Indicate which friend to next change permissions of.")
+cmd_help("fget",       "[var]              -- Get something about a friend.")
 cmd_help("fset",       "[var] [val]        -- Set something about a friend.")
+
+cmd_help("bget",       "[var]              -- Get something about the bot.")
+cmd_help("bset",       "[var] [val]        -- Set something about the bot.")
 
 function This:init()
    --assert(getmetatable(self).__index)--.permissions)
@@ -60,13 +64,13 @@ function This:init()
                friendperms = false, fget = false, fset = false,
       },
    }
-   self.edit_friend_info = {}
 
-   self.settable = { note_left=true }
-   self.gettable = {
+   self.settable = self.ssettable or { note_left=true }
+   self.gettable = self.gettable or {
       permissions = true, settable=true, gettable=true, cmd_help=true,
       addr = true, note_left=true, assured_name=true,
    }
+   self.edit_friend_info = self.edit_friend_info or {}
 end
 
 function This.cmds:friendadd(addr, msg)
@@ -132,7 +136,8 @@ function This.cmds:leave_note(text)
    end
 end
 function This.cmds:stop()
-   return "Not yet implemented"
+   self.bot.stop = true
+   return "Stopping.. (depends on loop implementation)"
 end
 
 function This.cmds:friends_list()
@@ -181,7 +186,7 @@ function This.cmds:fget(var)
    end
 end
 
-function Cmd.cmds:fset(var, to_str)
+function This.cmds:fset(var, to_str)
    local friend = self.edit_friend
    if not friend then return "No editable friend specified" end
 
@@ -192,6 +197,22 @@ function Cmd.cmds:fset(var, to_str)
                    info.gettable)
 
    return friend:set(friend, string_split(var, "."), to_str, allowance)
+end
+
+-- Set/get things about the bot.
+function This.cmds:bget(var)
+   if self.b_gettable then
+      return access:get(self.bot, string_split(var, "."), self.b_gettable)
+   else
+      return "Nothing gettable about the bot"
+   end
+end
+function This.cmds:bset(var, to_str)
+   if self.b_settable then
+      return access:get(self.bot, string_split(var, "."), to_str, self.b_settable)
+   else
+      return "Nothing settable about the bot"
+   end
 end
 
 function This:msg(text)
@@ -233,16 +254,19 @@ function This:export_table()
    return {
       name = self.name, assured_name = self.assured_name,
       addr = self.addr, said_hello = self.said_hello,
-      permissions=self.permissions, left_note=self.left_note
+      left_note = self.left_note,
+      gettable = self.gettable, settable = self.settable,
+      permissions=self.permissions,
+      edit_friend_info = self.edit_friend_info,
    }
 end
 
 local serial = require "tox_comms.storebin.file"
 function This:save()
-   self.dir = self.dir or (self.bot.dir .. "/" .. self.addr .. "/")
-   os.execute("mkdir -p " .. self.dir)
+   local dir = self.bot.dir .. "/friends/" .. self.addr .. "/"
+   os.execute("mkdir -p " .. dir)
 
-   serial.encode(self.dir .. "self.state", self:export_table())
+   assert(serial.encode(dir .. "self.state", self:export_table()))
 end
 
 return This
