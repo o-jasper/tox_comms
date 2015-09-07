@@ -62,7 +62,7 @@ function Cmd.cmds:get(var)
 end
 
 function Cmd.cmds:set(var, to_str)
-   access:set(self, string_split(var, "."), to_str, self.settable)
+   return access:set(self, string_split(var, "."), to_str, self.settable)
 end
 
 function Cmd.cmds:about()
