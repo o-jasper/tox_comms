@@ -8,6 +8,7 @@ return {
       if fd then
          encode(function(str) fd:write(str) end, data)
          fd:close()
+         return true
       end
    end,
    decode = function(file) 
