@@ -42,11 +42,9 @@ function Bot:ensure_friend(friend)
 end
 
 function Bot:friend_add(addr, add_msg)
-   print("fa", addr)
    return self:ensure_friend(self.tox:friend_add(addr, add_msg, #add_msg, nil))
 end
 function Bot:friend_add_norequest(addr)
-   print("far", addr)
    return self:ensure_friend(self.tox:friend_add_norequest(addr))
 end
 
@@ -90,6 +88,9 @@ function Bot:init()
 
    if self.status_message then
       tox:set_status_message(self.status_message)
+   end
+   if self.use_name or self.name then
+      tox:self_set_name(self.use_name or self.name)
    end
 
    local function id(...) return ... end
