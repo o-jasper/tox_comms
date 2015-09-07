@@ -5,6 +5,7 @@
 --  by the Free Software Foundation, either version 3 of the License, or
 --  (at your option) any later version.
 
+local access = require("tox_comms.Cmd.Access"):new()
 local Cmd = require "tox_comms.Cmd"
 
 local This = {}
@@ -42,6 +43,9 @@ cmd_help("note",       "[..text...]        -- Leave a note at the bot(setting ov
 cmd_help("stop",       "                   -- Stops the bot.")
 cmd_help("save",       "                   -- Make it save everything.")
 
+cmd_help("friend_edit","[friend addr]      -- Indicate which friend to next change permissions of.")
+cmd_help("fset",       "[var] [val]        -- Set something about a friend.")
+
 function This:init()
    --assert(getmetatable(self).__index)--.permissions)
    self.permissions = self.permissions or {
@@ -52,13 +56,16 @@ function This:init()
                mail = "text", addr = 0,
                friend_list = false,
                note = "text",
-               save = false
-      }
+               save = false,
+               friendperms = false, fget = false, fset = false,
+      },
    }
+   self.edit_friend_info = {}
+
    self.settable = { note_left=true }
    self.gettable = {
       permissions = true, settable=true, gettable=true, cmd_help=true,
-      addr = true, note_left=true,
+      addr = true, note_left=true, assured_name=true,
    }
 end
 
@@ -118,7 +125,7 @@ function This.cmds:mail()
 end
 function This.cmds:note(text)
    if not text or text == "" then
-      return "Current note is:\n" .. self.note_left
+      return self.note_left and ("Current note is:\n" .. self.note_left) or "No current note"
    else
       self.note_left = text
       return "Made note"
@@ -141,14 +148,63 @@ function This.cmds:save()
    return "Saved stuff"
 end
 
+function This.cmds:friend_edit(addr)
+   if not addr then
+      self.edit_friend = nil
+      return "Need an address of the friend involved."
+   elseif self.bot.friends[addr] then
+      self.edit_friend = self.bot.friends[addr]
+      return string.format("Editing friend %s\n, %s%s",
+                           addr, self.assured_name or "NO ASSURED NAME",
+                           self.assured_name == self.name and ""
+                              or "claimed name " .. self.name)
+   else
+      self.edit_friend = nil
+      return string.format("No friend %s listed",  addr)
+   end
+end
+
+function This.cmds:fget(var)
+   local friend = self.edit_friend
+   if not friend then return "No editable friend specified" end
+
+   local info = self.edit_friend_info[friend.addr] or {}
+   local allowance =
+      access:least(info.get_more_than_self   or self.gettable,
+                   info.get_more_than_friend or friend.gettable,
+                   info.gettable)
+   local val, allow = access:get(friend, string_split(var, "."), allowance)
+   if allow then
+      return access:str(val, "..", allow)
+   else
+      return "friend access denied"
+   end
+end
+
+function Cmd.cmds:fset(var, to_str)
+   local friend = self.edit_friend
+   if not friend then return "No editable friend specified" end
+
+   local info = self.edit_friend_info[friend.addr] or {}
+   local allowance =
+      access:least(info.get_more_than_self   or self.gettable,
+                   info.get_more_than_friend or friend.gettable,
+                   info.gettable)
+
+   return friend:set(friend, string_split(var, "."), to_str, allowance)
+end
+
 function This:msg(text)
    self.friend:send_message(text)
 end
 
 function This:on_message(kind, msg)
    if string.sub(msg, 1, 1) == "." then
-      if self.permissions.any_cmds then
+      local any = self.permissions.any_cmds
+      if any == true then
          return self:on_cmd(string.sub(msg, 2))
+      elseif any == "vocal" then
+         self:msg("X> No permission to do commands at all.")
       end
    end
 end
@@ -175,6 +231,7 @@ end
 
 function This:export_table()
    return {
+      name = self.name, assured_name = self.assured_name,
       addr = self.addr, said_hello = self.said_hello,
       permissions=self.permissions, left_note=self.left_note
    }
