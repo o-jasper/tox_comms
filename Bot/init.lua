@@ -7,6 +7,7 @@
 
 local ffi = require "ffi"
 local Tox = require "tox_comms.Tox"
+local serial = require "tox_comms.storebin.file"
 
 local Bot = {}
 Bot.__index = Bot
@@ -27,7 +28,13 @@ function Bot:ensure_friend(friend)
       if not got then
          local args = {}
          for k,v in pairs(self.Friend_args) do args[k] = v end
-         args.friend = friend
+         -- Fetch previous state.
+         local from_file = self.dir .. "/friends/" .. addr .. "/self.state"
+         for k,v in pairs(serial.decode(from_file) or {}) do
+            args[k] = v
+         end
+
+         args.friend = friend  -- Actually dont want this to be in there.
          args.bot = self
          args.addr = addr
          got = self.Friend:new(args)
@@ -78,13 +85,13 @@ function Bot:init()
 
    local tox = self:init_tox()
 
+   self.friend_not_done_fids = {}
    if not self.friends then
       self.friends = {}
       for addr in proper_io_lines(self.dir .. "friend_addr.txt") do
          self:friend_add_norequest(addr)
       end
    end
-   self.friend_not_done_fids = {}
 
    if self.status_message then
       tox:set_status_message(self.status_message)
