@@ -17,15 +17,15 @@ function Access:least(...)
             specifics = allow
          end
       elseif type(allow) == "table" then
-         table.insert(allow_list, allow)
+         table.insert(allow_list, allow)  -- Can only be tables in there.
       elseif allow ~= true then
          print("BUG an allow not valid?", allow)
          return false
       end  -- If is true, allowed according to that one.
    end
-   
-   if #allow_list == 1 then return allow_list[1] end
-   if #allow_list == 0 then return true end
+   for _, el in ipairs(allow_list) do assert(type(el) == "table") end
+   if specific         then return specific end
+   if #allow_list <= 1 then return allow_list[1] or true end
    
    local function index(_, key)
       local here = {}
@@ -46,14 +46,14 @@ function Access:set(into, var, to_str, allow)
             return "Not allow endpoint"
          elseif allow == "string" then
             val[el] = to_str
-            return "Success"
+            return "Success, set string"
          elseif allow == "number" then
             local x = tonumber(to_str)
             if x then
                val[el] = x
-               return "Success"
+               return "Success. set number"
             else
-               return "Only number allowed here."
+               return "Fail; not number."
             end
          elseif allow == "boolean" then
             if to_str == "true" or to_str == "1" then
@@ -61,11 +61,11 @@ function Access:set(into, var, to_str, allow)
             elseif to_str == "false" or to_str == "nil" then
                val[el] = false
             else
-               return "Only boolean allowed here"
+               return "Fail; not boolean"
             end
-            return "Success"
+            return "Success, set boolean"
          else
-            return "Possibly incorrect allow?"
+            return string.format("Possibly incorrect allow? (%s)", allow)
          end
       end
       val = val[el]
