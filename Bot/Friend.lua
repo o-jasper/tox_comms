@@ -28,7 +28,7 @@ This.__index = This
 
 function This:new(new)
    new = setmetatable(new or {}, self)
-   self:init()
+   new:init()
    return new
 end
 
@@ -39,7 +39,7 @@ cmd_help("speakto",    "[addr] [..text..]  -- Echo what is next into the indicat
 cmd_help("mail",       "[..text...]        -- Send \"mail\", only for comments about the bot.")
 cmd_help("addr",       "                   -- Tell the address of the bot.")
 
-cmd_help("note",       "[..text...]        -- Leave a note at the bot(setting overwrites)")
+cmd_help("leave_note", "[..text...]        -- Leave a note at the bot(setting overwrites)")
 cmd_help("stop",       "                   -- Stops the bot.")
 cmd_help("save",       "                   -- Make it save everything.")
 
@@ -123,7 +123,7 @@ end
 function This.cmds:mail()
    return "Not yet implemented"
 end
-function This.cmds:note(text)
+function This.cmds:leave_note(text)
    if not text or text == "" then
       return self.note_left and ("Current note is:\n" .. self.note_left) or "No current note"
    else
