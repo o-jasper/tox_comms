@@ -43,9 +43,9 @@ encoders = {
 
    number = function(write, data)
       if data == 1/0 then
-         encode_uint(write, 5 + 8*3)
+         encode_uint(write, 5 + 16*3)
       elseif data == -1/0 or (data~=0 and 2*data == data) or data ~= data then
-         encode_uint(write, 5 + 8*4)
+         encode_uint(write, 5 + 16*4)
       elseif data%1 == 0 then -- Integer
          if data < 0 then
             encode_uint(write, 2 - 8*data)
@@ -64,8 +64,9 @@ encoders = {
             got[i] = true
             i = i + 1
          end
-         while data[i] == nil do i = i - 1 end
       end
+      while i > 0 and data[i] == nil do i = i - 1 end
+
       local cnt = 0
       for k,v in pairs(data) do
          if not (not_key[k] or got[k]) then
@@ -87,7 +88,7 @@ encoders = {
          encode(write, data[j])
       end
       
-      for k,v in pairs(data) do
+      for k,v in pairs(data) do  -- Feed the key-value.
          if not (not_key[k] or got[k]) then
             encode(write, k)
             encode(write, v)
@@ -95,15 +96,20 @@ encoders = {
       end
    end,
 
-   boolean = function(write, data) encode_uint(write, 5 + 8*(data and 0 or 1)) end,
+   boolean = function(write, data) encode_uint(write, 5 + 16*(data and 1 or 0)) end,
 
-   ["nil"] = function(write) encode_uint(write, 5 + 8*2) end,
+   ["nil"] = function(write) encode_uint(write, 5 + 16*2) end,
    
-   ["function"] = function(write) encode_uint(write, 5 + 8*3) end,
+   ["function"] = function(write) encode_uint(write, 5 + 16*3) end,
 
-   userdata = function(write) encode_uint(write, 5 + 8*4) end,
+   userdata = function(write) encode_uint(write, 5 + 16*4) end,
 
-   thread = function(write) encode_uint(write, 5 + 8*5) end,
+   thread = function(write) encode_uint(write, 5 + 16*5) end,
 }
 
-return encode
+local function pub_encode(write, data)
+   encode_uint(write, 0)  -- This encoder does not do definitions.
+   encode(write, data)
+end
+
+return pub_encode
