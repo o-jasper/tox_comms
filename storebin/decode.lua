@@ -9,15 +9,15 @@ local function decode_positive_float(read, top)
 end
 local decode
 
-local function decode_table(deflist, read, cnt, meta_fun)
+local function decode_table(read, cnt, meta_fun, deflist)
    local list_cnt = decode_uint(read)
    local ret = {}
    for _ = 1,list_cnt do
-      table.insert(ret, decode(deflist, read, meta_list))
+      table.insert(ret, decode(read, meta_list, deflist))
    end
    for _ = 1,cnt do
-      local key = decode(deflist, read, meta_list)
-      ret[key]  = decode(deflist, read, meta_list)
+      local key = decode(read, meta_list, deflist)
+      ret[key]  = decode(read, meta_list, deflist)
    end
    return ret
 end
@@ -32,7 +32,7 @@ local function copy(x)
    end
 end
 
-decode = function(deflist, read, meta_fun)
+decode = function(read, meta_fun, deflist)
    local top = decode_uint(read)
    local sel, pass = top % 8, floor(top/8)
    if sel == 0 then -- String.
@@ -52,23 +52,25 @@ decode = function(deflist, read, meta_fun)
          return ({false, true, nil, 1/0, -1/0})[1 + floor(pass/2)]
       end
    elseif sel == 6 then
-      return decode_table(deflist, read, pass, meta_fun)
+      return decode_table(read, pass, meta_fun, deflist)
    elseif sel == 7 then -- Table.
       local name_len = decode_uint(read)
       local name = read(name_len)
-      local ret = decode_table(deflist, read, pass, meta_fun)
+      local ret = decode_table(read, pass, meta_fun, deflist)
       return meta_fun[key] and meta_fun[key](ret) or ret
    end
 end
 
-local function pub_decode(read, meta_fun)
-   local deflist = {}
-   local def_cnt = decode_uint(read)
-   for _= 1, def_cnt do  -- Get out definitions.
-      table.insert(deflist, decode(deflist, read, meta_fun))
+local function pub_decode(read, meta_fun, deflist)
+   if not deflist then  -- Then we still need to read the deflist.
+      deflist = {}
+      local def_cnt = decode_uint(read)
+      for _= 1, def_cnt do  -- Get out definitions.
+         table.insert(decode(deflist, read, meta_fun, deflist))
+      end
    end
 
-   return decode(deflist, read, meta_fun or {})
+   return decode(read, meta_fun or {}, deflist)
 end
 
 return pub_decode
