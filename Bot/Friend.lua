@@ -70,7 +70,6 @@ function This:init()
       permissions = true, settable=true, gettable=true, cmd_help=true,
       addr = true, note_left=true, assured_name=true,
    }
-   self.edit_friend_info = self.edit_friend_info or {}
 end
 
 function This.cmds:friendadd(addr, msg)
@@ -170,33 +169,39 @@ function This.cmds:friend_edit(addr)
 end
 
 function This.cmds:fget(var)
-   local friend = self.edit_friend
-   if not friend then return "No editable friend specified" end
+   if self.edit_friend_info then
+      local friend = self.edit_friend
+      if not friend then return "No editable friend specified" end
 
-   local info = self.edit_friend_info[friend.addr] or {}
-   local allowance =
-      access:least(info.get_more_than_self   or self.gettable,
-                   info.get_more_than_friend or friend.gettable,
-                   info.gettable)
-   local val, allow = access:get(friend, string_split(var, "."), allowance)
-   if allow then
-      return access:str(val, "..", allow)
-   else
-      return "friend access denied"
+      local info = self.edit_friend_info[friend.addr] or self.edit_friend_info.default or {}
+      local allowance = (info == "same_as_self" and self.gettable) or
+         access:least(info.get_more_than_self   or self.gettable,
+                      info.get_more_than_friend or friend.gettable,
+                      info.gettable)
+      local val, allow = access:get(friend, string_split(var, "."), allowance)
+      if allow then
+         return access:str(val, "..", allow)
+      else
+         return "Access denied."
+      end
    end
+   return "Nothing gettable about friends."
 end
 
 function This.cmds:fset(var, to_str)
-   local friend = self.edit_friend
-   if not friend then return "No editable friend specified" end
+   if self.edit_friend_info then
+      local friend = self.edit_friend
+      if not friend then return "No editable friend specified" end
 
-   local info = self.edit_friend_info[friend.addr] or {}
-   local allowance =
-      access:least(info.get_more_than_self   or self.gettable,
-                   info.get_more_than_friend or friend.gettable,
-                   info.gettable)
+      local info = self.edit_friend_info[friend.addr] or {}
+      local allowance =
+         access:least(info.get_more_than_self   or self.settable,
+                      info.get_more_than_friend or friend.settable,
+                      info.gettable)
 
-   return friend:set(friend, string_split(var, "."), to_str, allowance)
+      return friend:set(friend, string_split(var, "."), to_str, allowance)
+   end
+   return "Nothing settable about friends."
 end
 
 -- Set/get things about the bot.
