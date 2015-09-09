@@ -266,8 +266,9 @@ function This:export_table()
    }
 end
 
-local serial = require "storebin"
 function This:save()
+   local serial = require "storebin"
+
    local dir = self.bot.dir .. "/friends/" .. self.addr .. "/"
    os.execute("mkdir -p " .. dir)
 

@@ -7,7 +7,6 @@
 
 local ffi = require "ffi"
 local Tox = require "tox_comms.Tox"
-local serial = require "storebin"
 
 local Bot = {}
 Bot.__index = Bot
@@ -29,9 +28,13 @@ function Bot:ensure_friend(friend)
          local args = {}
          for k,v in pairs(self.Friend_args) do args[k] = v end
          -- Fetch previous state.
-         local from_file = self.dir .. "/friends/" .. addr .. "/self.state"
-         for k,v in pairs(serial.file_decode(from_file) or {}) do
-            args[k] = v
+         if not self.no_storebin then
+            local serial = require "storebin"
+
+            local from_file = self.dir .. "/friends/" .. addr .. "/self.state"
+            for k,v in pairs(serial.file_decode(from_file) or {}) do
+               args[k] = v
+            end
          end
 
          args.friend = friend  -- Actually dont want this to be in there.
