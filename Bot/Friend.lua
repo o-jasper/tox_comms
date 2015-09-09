@@ -266,12 +266,12 @@ function This:export_table()
    }
 end
 
-local serial = require "tox_comms.storebin.file"
+local serial = require "storebin"
 function This:save()
    local dir = self.bot.dir .. "/friends/" .. self.addr .. "/"
    os.execute("mkdir -p " .. dir)
 
-   assert(serial.encode(dir .. "self.state", self:export_table()))
+   assert(serial.file_encode(dir .. "self.state", self:export_table()))
 end
 
 return This

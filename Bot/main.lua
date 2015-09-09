@@ -1,7 +1,7 @@
 local Bot = require "tox_comms.Bot"
 
 local bot = Bot:new()
-print("Myself:", bot:addr())
+print("Myself:", bot.tox:addr())
 
 local socket = require "socket"
 

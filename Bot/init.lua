@@ -7,7 +7,7 @@
 
 local ffi = require "ffi"
 local Tox = require "tox_comms.Tox"
-local serial = require "tox_comms.storebin.file"
+local serial = require "storebin"
 
 local Bot = {}
 Bot.__index = Bot
@@ -30,7 +30,7 @@ function Bot:ensure_friend(friend)
          for k,v in pairs(self.Friend_args) do args[k] = v end
          -- Fetch previous state.
          local from_file = self.dir .. "/friends/" .. addr .. "/self.state"
-         for k,v in pairs(serial.decode(from_file) or {}) do
+         for k,v in pairs(serial.file_decode(from_file) or {}) do
             args[k] = v
          end
 
