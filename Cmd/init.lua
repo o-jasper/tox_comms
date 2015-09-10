@@ -97,7 +97,8 @@ function Cmd:on_cmd(msg)
       while #args > perm do table.remove(args) end
       self:msg("-> " .. tostring(self.cmds[name](self, unpack(args)) or nil))
    else
-      self:msg("X> permission failed on arguments.")
+      self:msg(string.format("X> permission failed on arguments. %s(%s) doesnt mean anything for me",
+                             perm, type(perm)))
    end
    return true
 end
