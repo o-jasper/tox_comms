@@ -267,12 +267,14 @@ function This:export_table()
 end
 
 function This:save()
-   local serial = require "storebin"
-
    local dir = self.bot.dir .. "/friends/" .. self.addr .. "/"
    os.execute("mkdir -p " .. dir)
 
-   assert(serial.file_encode(dir .. "self.state", self:export_table()))
+   assert( self.bot.use_file_encode ~= false,
+           "Cannot serialize if you disabled file encoding." )
+
+   local file_encode = self.bot.use_file_encode or require "storebin"
+   assert(file_encode(dir .. "self.state", self:export_table()))
 end
 
 return This

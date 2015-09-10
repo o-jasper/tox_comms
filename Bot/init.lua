@@ -28,11 +28,10 @@ function Bot:ensure_friend(friend)
          local args = {}
          for k,v in pairs(self.Friend_args) do args[k] = v end
          -- Fetch previous state.
-         if not self.no_storebin then
-            local serial = require "storebin"
-
-            local from_file = self.dir .. "/friends/" .. addr .. "/self.state"
-            for k,v in pairs(serial.file_decode(from_file) or {}) do
+         local from_file = self.dir .. "/friends/" .. addr .. "/self.state"
+         if self.use_file_encode ~= false then
+            local tab = (self.use_file_decode or require("storebin").file_decode)(from_file)
+            for k,v in pairs(tab) do
                args[k] = v
             end
          end
