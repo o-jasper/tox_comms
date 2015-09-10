@@ -6,19 +6,7 @@ print("Myself:", bot.tox:addr())
 local socket = require "socket"
 
 local stop = false
-if arg[1] then
-   local f = bot:friend_add(arg[1], "bot 10k")
-   if f then
-      -- Give ability to stop to that particular friend.
-      f.permissions.cmds.stop = true
-      f.cmds.stop = function()
-         stop = true
-      end
-      print("Added id and gave some permissions.")
-   end
-else
-   print("Not adding any friends")
-end
+bot:friend_add(arg[1], "bot 10k")
 
 bot:save()
 print("First iteration")
