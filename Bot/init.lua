@@ -31,7 +31,7 @@ function Bot:ensure_friend(friend)
          local from_file = self.dir .. "/friends/" .. addr .. "/self.state"
          if self.use_file_encode ~= false then
             local tab = (self.use_file_decode or require("storebin").file_decode)(from_file)
-            for k,v in pairs(tab) do
+            for k,v in pairs(tab or {}) do
                args[k] = v
             end
          end
