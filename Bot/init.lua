@@ -51,7 +51,8 @@ function Bot:ensure_friend(friend)
 end
 
 function Bot:friend_add(addr, add_msg)
-   return self:ensure_friend(self.tox:friend_add(addr, add_msg, #add_msg, nil))
+   assert(addr)
+   return self:ensure_friend(self.tox:friend_add(addr, add_msg))
 end
 function Bot:friend_add_norequest(addr)
    return self:ensure_friend(self.tox:friend_add_norequest(addr))

@@ -6,7 +6,9 @@ print("Myself:", bot.tox:addr())
 local socket = require "socket"
 
 local stop = false
-bot:friend_add(arg[1], "bot 10k")
+if arg[1] then
+   bot:friend_add(arg[1], "bot 10k")
+end
 
 bot:save()
 print("First iteration")
