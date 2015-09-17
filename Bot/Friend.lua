@@ -273,7 +273,7 @@ function This:save()
    assert( self.bot.use_file_encode ~= false,
            "Cannot serialize if you disabled file encoding." )
 
-   local file_encode = self.bot.use_file_encode or require "storebin"
+   local file_encode = self.bot.use_file_encode or require("storebin").file_encode
    assert(file_encode(dir .. "self.state", self:export_table()))
 end
 
