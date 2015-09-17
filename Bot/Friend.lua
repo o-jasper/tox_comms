@@ -104,7 +104,7 @@ function This.cmds:speakto(input)
          end
          local friend = self.bot.friends[addr]
          if friend then
-            friend:send_message(table.concat({...}, " "))
+            friend:send_message(msg)
             return "msg sent"
          else
             return "have to add the friend first"
