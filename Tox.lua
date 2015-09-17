@@ -1,4 +1,4 @@
---  Copyright (C) 07-08-2015 Jasper den Ouden.
+--  Copyright (C) 07-09-2015 Jasper den Ouden.
 --
 --  This is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published
@@ -87,19 +87,20 @@ for k, is_raw in pairs(tox_funlist) do
    Tox[is_raw and "_" .. k or k] = function(self, ...) return fun(self.cdata, ...) end
 end
 
-function Tox._friend_add_fid(self, fid)
+function Tox:_friend_add_fid(fid)
    local friend = ToxFriend.new{fid=fid, tox=self}
    self.friends[fid] = friend
    return friend
 end
 
-function Tox.friend_add(self, addr, comment)
-   local addr, _comment = to_c.addr(addr), to_c.str(comment)
+Tox.default_friend_add_msg = "No message"
+function Tox:friend_add(addr, comment)
+   local addr, _comment = to_c.addr(addr), to_c.str(comment or self.default_friend_add_msg)
    local fid = raw.tox_friend_add(self.cdata, addr, _comment, #comment, nil)
    return self:_friend_add_fid(fid)
 end
 
-function Tox.friend_add_norequest(self, addr)
+function Tox:friend_add_norequest(addr)
    local addr = to_c.addr(addr)
    local fid = raw.tox_friend_add_norequest(self.cdata, addr, nil)
    return self:_friend_add_fid(fid)
@@ -203,7 +204,7 @@ Tox.pubkey_name = "default"
 
 local lfs = require "lfs"  -- Dont understand why no `os.mkdir`
 
-function Tox.new(self)
+function Tox.new(self)  -- TODO to new convention.
    self = setmetatable(self, Tox)
    self:init()
    return self
