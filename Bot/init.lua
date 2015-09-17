@@ -82,6 +82,16 @@ function Bot:init_tox()
    return self.tox
 end
 
+function Bot:set_status_and_user_name()
+   if self.status_message then
+      self.tox:set_status_message(self.status_message)
+   end
+   if self.use_name or self.name then
+      print("Setting name", self.use_name or self.name)
+      self.tox:self_set_name(self.use_name or self.name)
+   end
+end
+
 function Bot:init()
    self.dir = self.dir or os.getenv("HOME") .. "/.mybot/" .. self.name .. "/"
    os.execute("mkdir -p " .. self.dir)
@@ -96,12 +106,7 @@ function Bot:init()
       end
    end
 
-   if self.status_message then
-      tox:set_status_message(self.status_message)
-   end
-   if self.use_name or self.name then
-      tox:self_set_name(self.use_name or self.name)
-   end
+   self:set_status_and_user_name()
 
    local function id(...) return ... end
    local function friend_responder(name, handle)
