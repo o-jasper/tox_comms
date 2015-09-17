@@ -72,10 +72,12 @@ function This:init()
    }
 end
 
-function This.cmds:friendadd(addr, msg)
+function This.cmds:friendadd(input)
+   local addr = string.match(input, "^[%s]*([%x]+)[%s]+")
+   local add_msg = string.match(input, "[%s]+(.*)$")
+   add_msg = add_msg or "I am a bot, was asked to add you."
    local perm = self.permissions.friendadd
    if perm then
-      local add_msg = "I am a bot, was asked to add you."
       if perm == "name_origin" then
          add_msg = add_msg .. " From: " .. self.friend:addr()
       else
@@ -88,22 +90,28 @@ function This.cmds:friendadd(addr, msg)
    end
 end
 
-function This.cmds:speakto(addr, ...)
+function This.cmds:speakto(input)
+   local addr = string.match(input, "^[%s]*([%x]+)[%s]+")
+   local msg = string.match(input, "[%s]+(.+)$")
+
    local perm = self.permissions.speakto
    if perm then
-      local add_msg = "I am a bot, was asked to add you."
-      if perm == "name_friend" then
-         add_msg = add_msg .. " From: " .. self.friend:addr()
-      elseif type(perm) == "table" then
-         return "this sort of permission not yet implemented.(thus denied)"
+      if msg then
+         if perm == "name_friend" then
+            add_msg = add_msg .. " From: " .. self.friend:addr()
+         elseif type(perm) == "table" then
+            return "this sort of permission not yet implemented.(thus denied)"
+         end
+         local friend = self.bot.friends[addr]
+         if friend then
+            friend:send_message(table.concat({...}, " "))
+            return "msg sent"
+         else
+            return "have to add the friend first"
+         end
+      else 
+         return "Not sent; what is the message?"
       end
-      local friend = self.bot.friends[addr]
-      if friend then
-         friend:send_message(table.concat({...}, " "))
-         return "msg sent"
-      else
-         return "have to add the friend first"
-      end   
       --self.self.tox:friend_add(addr,  add_msg, #add_msg)
    else
       return "you do not have the permissions for that."
@@ -259,7 +267,7 @@ function This:export_table()
    return {
       name = self.name, assured_name = self.assured_name,
       addr = self.addr, said_hello = self.said_hello,
-      left_note = self.left_note,
+      note_left = self.note_left,
       gettable = self.gettable, settable = self.settable,
       permissions=self.permissions,
       edit_friend_info = self.edit_friend_info,
