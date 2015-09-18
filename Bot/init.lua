@@ -25,6 +25,7 @@ function Bot:ensure_friend(friend)
    if addr then
       local got = self.friends[addr]
       if not got then
+         print("Friend added", addr)
          local args = {}
          for k,v in pairs(self.Friend_args) do args[k] = v end
          -- Fetch previous state.
@@ -76,7 +77,9 @@ Bot.name = "default"
 function Bot:init_tox()
    self.tox = Tox.new {
       dirname = self.dir .. "/tox/",
-      name = "bot_" .. self.name, pubkey_name="bot_" .. self.name,
+      name = "bot_" .. self.name, usename = self.username,
+      pubkey_name="bot_" .. self.name,
+      status_message = self.status_message,
       savedata_file=self.savedata_file, auto_bootstrap=self.auto_bootstrap
    }
    return self.tox
