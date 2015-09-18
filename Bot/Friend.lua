@@ -34,8 +34,13 @@ end
 
 This.new_from_table= This.new
 
+-- Note.. concept of streams?
+-- (i.e. make a receiver, put things to output into it, tell it to send stuff places)
 cmd_help("friendadd",  "[addr]             -- Add another as friend.`")
 cmd_help("speakto",    "[addr] [..text..]  -- Echo what is next into the indicated friend.`")
+cmd_help("listento",   "[addr]             -- Listen in on guy.`")
+cmd_help("onbehalf",   "[addr] [..text..]  -- Pass message as if from him.`")
+
 cmd_help("mail",       "[..text...]        -- Send \"mail\", only for comments about the bot.")
 cmd_help("addr",       "                   -- Tell the address of the bot.")
 
@@ -95,8 +100,15 @@ function This.cmds:friendadd(input)
    end
 end
 
+function figure_friend(self, addr)
+   local friends = self.bot.friends
+   local f = friends[addr] or friends[string.sub(addr, 1, 64)]
+   return f
+end
+
 function This.cmds:speakto(input)
    local addr = string.match(input, "^[%s]*([%x]+)[%s]+")
+   if not addr then return "could not distinguish address" end
    local msg = string.match(input, "[%s]+(.+)$")
 
    local perm = self.permissions.speakto
@@ -107,7 +119,7 @@ function This.cmds:speakto(input)
          elseif type(perm) == "table" then
             return "this sort of permission not yet implemented.(thus denied)"
          end
-         local friend = self.bot.friends[addr]
+         local friend = figure_friend(self, addr)
          if friend then
             friend:msg(msg)
             return "msg sent"
@@ -123,10 +135,38 @@ function This.cmds:speakto(input)
    end
 end
 
+function This.cmds:any_cmds(of_addr, dir)
+   local f = figure_friend(self, addr)
+   if f then
+      f.permissions.any_cmds = (dir == "true")
+      return (dir == "true") and "Enabled commands" or "Disabled his commands"
+   else
+      return "Aint got guy like that."
+   end
+end
+
+function This.cmds:onbehalf(input)
+   local perms = self.permissions
+   if perms.onbehalf then
+      local addr = string.match(input, "^[%s]*([%x]+)[%s]+")
+      if not addr then return "Couldnt figure addr" end
+      local msg = string.match(input, "[%s]+(.+)$")
+      local f = figure_friend(self, addr)
+      if f then
+         f:on_message(0, input)
+         return "sent message acted as from that addr."
+      else
+         return "Couldnt find that friend"
+      end
+   else
+      return "Not permitted"
+   end
+end
+
 function This.cmds:listento(addr)
    local perms = self.permissions
-   local friend = self.bot.friends[addr]
    if perms.listento then
+      local friend = figure_friend(self, addr)
       if friend then   -- Add to listeners.
          if friend.permissions.block_listen then
             friend:msg(self.addr .. "tried to listen in")
@@ -194,8 +234,10 @@ function This.cmds:friend_edit(addr)
    if not addr then
       self.edit_friend = nil
       return "Need an address of the friend involved."
-   elseif self.bot.friends[addr] then
-      self.edit_friend = self.bot.friends[addr]
+   end
+   local f = figure_friend(addr)
+   if f then
+      self.edit_friend = f
       return string.format("Editing friend %s\n, %s%s",
                            addr, self.assured_name or "NO ASSURED NAME",
                            self.assured_name == self.name and ""
