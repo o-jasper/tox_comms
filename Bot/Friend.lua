@@ -65,25 +65,30 @@ function This:init()
       },
    }
 
-   self.settable = self.ssettable or { note_left=true }
+   self.settable = self.settable or { note_left=true }
    self.gettable = self.gettable or {
       permissions = true, settable=true, gettable=true, cmd_help=true,
       addr = true, note_left=true, assured_name=true,
    }
+
+   self.listeners = {}
 end
 
 function This.cmds:friendadd(input)
-   local addr = string.match(input, "^[%s]*([%x]+)[%s]+")
+   local addr = string.match(input, "^[%s]*([%x]+)[%s]*")
+   if not addr then return "Failed to parse address" end
+
    local add_msg = string.match(input, "[%s]+(.*)$")
    add_msg = add_msg or "I am a bot, was asked to add you."
    local perm = self.permissions.friendadd
    if perm then
       if perm == "name_origin" then
-         add_msg = add_msg .. " From: " .. self.friend:addr()
-      else
+         add_msg = add_msg .. " (via bot)From: " .. self.friend:addr()
+      elseif perm ~= "bare" then
          return "Dont recognize " .. tostring(perm) .. " as permission."
       end
-      self.self.tox:friend_add(addr,  add_msg, #add_msg)
+      print("friend request", addr)
+      self.bot.tox:friend_add(addr, add_msg, #add_msg)
       return "added"
    else
       return "you do not have the permissions for that."
@@ -104,7 +109,7 @@ function This.cmds:speakto(input)
          end
          local friend = self.bot.friends[addr]
          if friend then
-            friend:send_message(msg)
+            friend:msg(msg)
             return "msg sent"
          else
             return "have to add the friend first"
@@ -115,6 +120,31 @@ function This.cmds:speakto(input)
       --self.self.tox:friend_add(addr,  add_msg, #add_msg)
    else
       return "you do not have the permissions for that."
+   end
+end
+
+function This.cmds:listento(addr)
+   local perms = self.permissions
+   local friend = self.bot.friends[addr]
+   if perms.listento then
+      if friend then   -- Add to listeners.
+         if friend.permissions.block_listen then
+            friend:msg(self.addr .. "tried to listen in")
+            return "couldnt find friend of that address (not really, blocked)"
+         else
+            friend.listeners[self.addr] = true
+            return "listening.."
+         end
+      else
+         for pk in pairs(self.bot.friends) do print("*", pk) end
+         print("=", addr)
+         return "couldnt find friend of that address (really)"
+      end
+   else
+      if friend then
+         friend:msg(self.addr .. "tried to listen in, did he have the permissions?")
+      end
+      return "couldnt find friend of that address (not really, lack perms)"
    end
 end
 
@@ -233,12 +263,19 @@ function This:msg(text)
 end
 
 function This:on_message(kind, msg)
+   local perms = self.permissions
    if string.sub(msg, 1, 1) == "." then
-      local any = self.permissions.any_cmds
+      local any = perms.any_cmds
       if any == true then
          return self:on_cmd(string.sub(msg, 2))
       elseif any == "vocal" then
          self:msg("X> No permission to do commands at all.")
+      end
+   end
+
+   if not perms.block_listen then
+      for addr in pairs(self.listeners) do
+         self.bot.friends[addr]:msg(self.name .. ": " .. msg)
       end
    end
 end
@@ -257,10 +294,10 @@ function This:on_status_message(msg)
                (perms.any_cmds and perms.cmds.help and " Use .help for options." or ""))
    end
    print("status_msg", msg)
-   self.status_msg = string.sub(msg, self.max_namelen)
+   self.status_msg = string.sub(msg, 1, self.max_namelen)
 end
 function This:on_name(name)
-   self.name = string.sub(name, self.max_namelen)
+   self.name = string.sub(name, 1, self.max_namelen)
 end
 
 function This:export_table()
