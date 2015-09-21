@@ -16,7 +16,7 @@ Bot.Friend_args = {}
 
 function Bot:new(new)
    new = setmetatable(new or {}, self)
-   self:init()
+   new:init()
    return new
 end
 
@@ -90,7 +90,7 @@ function Bot:set_status_and_user_name()
       self.tox:set_status_message(self.status_message)
    end
    if self.use_name or self.name then
-      print("Setting name", self.use_name or self.name)
+      print("Setting name", self.use_name or self.name, self.name)
       self.tox:self_set_name(self.use_name or self.name)
    end
 end
@@ -114,15 +114,16 @@ function Bot:init()
    local function id(...) return ... end
    local function friend_responder(name, handle)
       local handle = handle or id
-      return function(_, friend, ...)
-         local got = self:ensure_friend(friend)
+      local friends_dict = tox.friends
+      return function(cdata, fid, ...)
+         local got = self:ensure_friend(friends_dict[fid])
          if got ~= false then  -- Setting false blacklists; ignores.
             got["on_" .. name](got, handle(...))
          end
       end
    end
    local function friend_respond_to(name, handle)
-      tox:update_friend_callback(name, friend_responder(name, handle))
+      tox["callback_friend_" .. name](tox, friend_responder(name, handle), nil)
    end
    friend_respond_to("connection_status")
    
