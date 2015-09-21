@@ -118,24 +118,22 @@ function Bot:init()
       return function(cdata, fid, ...)
          local got = self:ensure_friend(friends_dict[fid])
          if got ~= false then  -- Setting false blacklists; ignores.
-            got["on_" .. name](got, handle(...))
+            local fun = got["on_" .. name]
+            if fun then fun(got, handle(...)) end
          end
       end
    end
    local function friend_respond_to(name, handle)
       tox["callback_friend_" .. name](tox, friend_responder(name, handle), nil)
    end
+   friend_respond_to("name", ffi.string)
+   friend_respond_to("status_message", ffi.string)
+   friend_respond_to("status")
    friend_respond_to("connection_status")
-   
-   friend_respond_to("message", function(kind, msg, msg_len)
-                        return kind, ffi.string(msg, msg_len)
-   end)
-   friend_respond_to("status_message", function(msg, msg_len)
-                        return ffi.string(msg, msg_len)
-   end)
-   friend_respond_to("name", function(name, name_len)
-                        return ffi.string(name, name_len)
-   end)
+   friend_respond_to("typing")
+   friend_respond_to("read_receipt")
+   local function hm(kind, msg, msg_len) return kind, ffi.string(msg, msg_len) end
+   friend_respond_to("message", hm)
 end
 
 function Bot:save()
