@@ -162,8 +162,9 @@ end
 function Tox:update_friend_callback(name, set_fun)
    local own_cb = self["cb_friend_" .. name] or set_fun
    self["cb_friend_" .. name] = own_cb
-   local function cb(itself, fid, ...)
-      local friend = self.friends[fid]
+   local friends_dict = self.friends
+   local function cb(tox_cdata, fid, ...)
+      local friend = friends_dict[fid]
       local friend_cb = friend and friend["cb_" .. name]
       if friend_cb then
          friend_cb(friend, ...)
@@ -175,14 +176,18 @@ function Tox:update_friend_callback(name, set_fun)
    self["callback_friend_" .. name](self, cb, nil)
 end
 
---   callback_friend_name = false,
---   callback_friend_status_message = false,
---   callback_friend_status = false,
---   callback_friend_connection_status = false,
---   callback_friend_typing = false,
---   callback_friend_read_receipt = false,
---   callback_friend_request = false,
---   callback_friend_message = false,
+function Tox:update_group_callback(name, set_fun)
+   local group_dict = self.groups
+
+   local function cb(tox_cdata, group_id, peernumber, ...)
+      local group = group_dict[group_id]
+      if group then
+         local friend = group.friends[peerenumber]
+         group["cb_" .. name](group, friend, ...)
+      end
+   end
+   self["callback_group_" .. name](self, cb, nil)
+end
 
 local function readall(fd)
    local ret, more = "", fd:read(1024)
