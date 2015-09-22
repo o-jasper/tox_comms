@@ -68,7 +68,7 @@ local function proper_io_lines(file)
       fd:close()
       return io.lines(file)
    else
-      return ipairs({}) -- F*ck it.
+      return ipairs{} -- F*ck it.
    end
 end
 
@@ -134,6 +134,10 @@ function Bot:init()
    friend_respond_to("read_receipt")
    local function hm(kind, msg, msg_len) return kind, ffi.string(msg, msg_len) end
    friend_respond_to("message", hm)
+
+   self.tox:update_callback("friend_request", function(cdata, addr)
+      self:ensure_friend(tox:friend_add_norequest(addr))
+   end)
 end
 
 function Bot:save()
