@@ -75,7 +75,7 @@ end
 Bot.name = "default"
 
 function Bot:init_tox()
-   self.tox = Tox.new {
+   self.tox = Tox:new {
       dirname = self.dir .. "/tox/",
       name = "bot_" .. self.name, usename = self.username,
       pubkey_name="bot_" .. self.name,
@@ -91,7 +91,7 @@ function Bot:set_status_and_user_name()
    end
    if self.use_name or self.name then
       print("Setting name", self.use_name or self.name, self.name)
-      self.tox:self_set_name(self.use_name or self.name)
+      self.tox:set_name(self.use_name or self.name)
    end
 end
 
