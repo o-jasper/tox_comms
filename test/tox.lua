@@ -33,7 +33,7 @@ print(hexify(comm:self_get_address(), 38))
 
 local msg = "testing friend add(just some dude)"
 -- Adds an account i happen to have.
-print("fa:", comm:friend_add("DB116EA92FC6E85C24B9AF5E8F61BAF1F853B2D8B21E9D4AF8E29532435099085C589E40DC1A", msg, #msg, nil))
+print("fa:", comm:add_friend("DB116EA92FC6E85C24B9AF5E8F61BAF1F853B2D8B21E9D4AF8E29532435099085C589E40DC1A", msg, #msg, nil))
 
 
 

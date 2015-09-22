@@ -33,14 +33,14 @@ end
 
 b:update_callback("friend_request",
                   function(_, pubkey, message, len)
-                     local f = b:friend_add_norequest(pubkey)
+                     local f = b:add_friend_norequest(pubkey)
                      print("friendadd", ffi.string(message, len), f.fid)
                      b.friends[f.fid] = ToxChannel.from_Friend(f)
                      
                      send_print(a.friends[0], f)
 end)
 
-local f = a:friend_add(hexify(b:self_get_address(), 38), "add me plz")
+local f = a:add_friend(hexify(b:self_get_address(), 38), "add me plz")
 a.friends[f.fid] = ToxChannel.from_Friend(f)
 print(f.fid)
 

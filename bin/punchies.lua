@@ -1,5 +1,7 @@
 -- Absolute single track mind. Dont be this guy!
 
+-- TODO probably not up to date!
+
 local ffi = require "ffi"
 
 local Tox = require "tox_comms.Tox"
@@ -11,7 +13,7 @@ local comm = Tox.new({ name="punchies", pubkey_name="punchies",
                        savedata_file=true, auto_bootstrap=true})
 
 local add_msg = "Hi i am punchies :D"
-print("friend_add", arg[1], comm:friend_add(arg[1], add_msg, #add_msg, nil))
+print("add_friend", arg[1], comm:add_friend(arg[1], add_msg, #add_msg, nil))
 
 comm:update_callback("self_connection_status",
                      function(_, status) print("status", status) end)

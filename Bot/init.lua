@@ -52,12 +52,12 @@ function Bot:ensure_friend(friend)
    end
 end
 
-function Bot:friend_add(addr, add_msg)
+function Bot:add_friend(addr, add_msg)
    assert(addr)
-   return self:ensure_friend(self.tox:friend_add(addr, add_msg))
+   return self:ensure_friend(self.tox:add_friend(addr, add_msg))
 end
-function Bot:friend_add_norequest(addr)
-   return self:ensure_friend(self.tox:friend_add_norequest(addr))
+function Bot:add_friend_norequest(addr)
+   return self:ensure_friend(self.tox:add_friend_norequest(addr))
 end
 
 Bot.savedata_file = true
@@ -105,8 +105,8 @@ function Bot:init()
    self.friend_not_done_fids = {}
    if not self.friends then
       self.friends = {}
-      for addr in proper_io_lines(self.dir .. "friend_addr.txt") do
-         self:friend_add_norequest(addr)
+      for addr in proper_io_lines(self.dir .. "add_friendr.txt") do
+         self:add_friend_norequest(addr)
       end
    end
 
@@ -137,7 +137,7 @@ function Bot:init()
    friend_respond_to("message", hm)
 
    self.tox:update_callback("friend_request", function(cdata, addr)
-      self:ensure_friend(tox:friend_add_norequest(addr))
+      self:ensure_friend(tox:add_friend_norequest(addr))
    end)
 end
 

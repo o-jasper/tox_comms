@@ -102,9 +102,10 @@ local tox_funlist = {
    file_get_file_id = false,
    file_send = false,
    file_send_chunk = false,
-   self_get_udp_port = false,
-   self_get_tcp_port = false,
+   self_get_udp_port = "udp_port",
+   self_get_tcp_port = "tcp_port",
 
+-- Set via `raw` or `update_.._callback`
 --   callback_self_connection_status = false,
 --   callback_friend_name = false,
 --   callback_friend_status_message = false,
@@ -123,6 +124,8 @@ local tox_funlist = {
 
    iterate = false,
    iteration_interval = false,
+
+   add_groupchat = false,
 }
 
 -- Copy-in either raw or 
@@ -131,28 +134,28 @@ for k, rename in pairs(tox_funlist) do
    Tox[rename or k] = function(self, ...) return fun(self.cdata, ...) end
 end
 
-function Tox:_friend_add_fid(fid)
+function Tox:_add_friend_fid(fid)
    local friend = ToxFriend:new{fid=fid, tox=self}
    self.friends[fid] = friend
    return friend
 end
 
-Tox.default_friend_add_msg = "No message"
-function Tox:friend_add(addr, comment)
-   local addr, _comment = to_c.addr(addr), to_c.str(comment or self.default_friend_add_msg)
+Tox.default_add_friend_msg = "No message"
+function Tox:add_friend(addr, comment)
+   local addr, _comment = to_c.addr(addr), to_c.str(comment or self.default_add_friend_msg)
    local fid = raw.tox_friend_add(self.cdata, addr, _comment, #comment, nil)
-   return self:_friend_add_fid(fid)
+   return self:_add_friend_fid(fid)
 end
 
-function Tox:friend_add_norequest(addr)
+function Tox:add_friend_norequest(addr)
    local addr = to_c.addr(addr)
    local fid = raw.tox_friend_add_norequest(self.cdata, addr, nil)
-   return self:_friend_add_fid(fid)
+   return self:_add_friend_fid(fid)
 end
 
 function Tox.friend_by_pubkey(pubkey)
    local fid = raw.tox_friend_by_public_key(self.cdata, to_c.addr(pubkey))
-   return self.friends[fid] or self:_friend_add_fid(fid)
+   return self.friends[fid] or self:_add_friend_fid(fid)
 end
 
 function Tox:friends_update()
@@ -161,6 +164,7 @@ function Tox:friends_update()
    raw.tox_self_get_friend_list(self.cdata, list)
    local i = 0 
    while i < n do
+      assert(self)
       self.friends[list[i]] = ToxFriend:new{fid=list[i], tox=self}
       i = i + 1
    end

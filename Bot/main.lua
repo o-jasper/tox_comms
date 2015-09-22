@@ -7,7 +7,7 @@ local socket = require "socket"
 
 local stop = false
 if arg[1] then
-   bot:friend_add(arg[1], "bot 10k")
+   bot:add_friend(arg[1], "bot 10k")
 end
 
 bot:save()

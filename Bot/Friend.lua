@@ -93,7 +93,7 @@ function This.cmds:friendadd(input)
          return "Dont recognize " .. tostring(perm) .. " as permission."
       end
       print("friend request", addr)
-      self.bot.tox:friend_add(addr, add_msg, #add_msg)
+      self.bot.tox:add_friend(addr, add_msg, #add_msg)
       return "added"
    else
       return "you do not have the permissions for that."
@@ -129,7 +129,7 @@ function This.cmds:speakto(input)
       else 
          return "Not sent; what is the message?"
       end
-      --self.self.tox:friend_add(addr,  add_msg, #add_msg)
+      --self.self.tox:add_friend(addr,  add_msg, #add_msg)
    else
       return "you do not have the permissions for that."
    end
