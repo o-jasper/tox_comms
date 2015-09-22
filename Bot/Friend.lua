@@ -46,11 +46,8 @@ cmd_help("stop",       "                   -- Stops the bot.")
 cmd_help("save",       "                   -- Make it save everything.")
 
 cmd_help("friend_edit","[friend addr]      -- Indicate which friend to next change permissions of.")
-cmd_help("fget",       "[var]              -- Get something about a friend.")
-cmd_help("fset",       "[var] [val]        -- Set something about a friend.")
-
-cmd_help("bget",       "[var]              -- Get something about the bot.")
-cmd_help("bset",       "[var] [val]        -- Set something about the bot.")
+cmd_help("get",       "[var]              -- Get something about a friend.")
+cmd_help("set",       "[var] [val]        -- Set something about a friend.")
 
 This.use_file_decode = require "storebin"
 
@@ -74,7 +71,7 @@ function This:init()
                friend_list = false,
                note = "text",
                save = false,
-               friendperms = false, fget = false, fset = false,
+               friendperms = false, get = false, set = false,
       },
    }
 
@@ -85,7 +82,6 @@ function This:init()
    }
 
    self.listeners = {}
-   print("I")
 end
 
 function This.cmds:friendadd(input)
@@ -254,7 +250,7 @@ function This.cmds:friend_edit(addr)
    end
 end
 
-function This.cmds:fget(var)
+function This.cmds:get(var)
    if self.edit_friend_info then
       local friend = self.edit_friend
       if not friend then return "No editable friend specified" end
@@ -274,7 +270,7 @@ function This.cmds:fget(var)
    return "Nothing gettable about friends."
 end
 
-function This.cmds:fset(var, to_str)
+function This.cmds:set(var, to_str)
    if self.edit_friend_info then
       local friend = self.edit_friend
       if not friend then return "No editable friend specified" end
@@ -288,22 +284,6 @@ function This.cmds:fset(var, to_str)
       return friend:set(friend, string_split(var, "."), to_str, allowance)
    end
    return "Nothing settable about friends."
-end
-
--- Set/get things about the bot.
-function This.cmds:bget(var)
-   if self.b_gettable then
-      return access:get(self.tox, string_split(var, "."), self.b_gettable)
-   else
-      return "Nothing gettable about the bot"
-   end
-end
-function This.cmds:bset(var, to_str)
-   if self.b_settable then
-      return access:get(self.tox, string_split(var, "."), to_str, self.b_settable)
-   else
-      return "Nothing settable about the bot"
-   end
 end
 
 function This:cb_message(kind, msg)
