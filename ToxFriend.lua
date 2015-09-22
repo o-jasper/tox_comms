@@ -13,16 +13,25 @@ local to_c = require "tox_comms.ffi.to_c"
 local ToxFriend = { __name = "ToxFriend" }
 ToxFriend.__index = ToxFriend
 
-function ToxFriend.new(self)
-   self.cdata = self.tox.cdata
-   return setmetatable(self, ToxFriend)
+function ToxFriend:new(new)
+   local new = setmetatable(new or {}, self)
+   new.cdata = new.tox.cdata
+   return new
 end
 
+-- TODO `delete` takes more..
 for k,v in pairs({delete=false, exists=false, get_status="status",
                   get_last_online="last_online", get_typing="typing" }) do
    local name = v or k
    local c_name = "tox_friend_" .. k
    ToxFriend[name] = function(self) raw[c_name](self.cdata, self.fid) end
+end
+
+function ToxFriend:status_messsage()
+   local sz = raw.tox_friend_get_status_message_size(self.cdata, self.fid, nil)
+   local ret = ffi.new("uint8_t[?]", sz)
+   raw.tox_friend_get_status_message_size(self.cdata, self.fid, ret, nil)
+   return ffi,string(ret, sz)
 end
 
 function ToxFriend:pubkey()
@@ -51,6 +60,8 @@ function ToxFriend:send_message(msg, kind)
    return raw.tox_friend_send_message(self.cdata, self.fid, kind or 0,
                                       to_c.str(msg), #msg, nil)
 end
+
+ToxFriend.msg = ToxFriend.send_message
 
 function ToxFriend:send_lossy_packet(data)
    return raw.tox_friend_send_lossy_packet(self.cdata, self.fid, to_c.str(data), #data, nil)

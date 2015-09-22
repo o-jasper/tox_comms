@@ -12,30 +12,87 @@ local ToxFriend = require "tox_comms.ToxFriend"
 
 local raw = require "tox_comms.ffi.raw"
 
+local Tox = { 
+   __name = "FFI_Tox",
+   PUBLIC_KEY_SIZE = 32,
+   SECRET_KEY_SIZE = 32,
+   ADDRESS_SIZE = 38,
+   MAX_NAME_LENGTH = 128,
+   MAX_STATUS_MESSAGE_LENGTH = 1007,
+   MAX_FRIEND_REQUEST_LENGTH = 1016,
+   MAX_MESSAGE_LENGTH = 1372,
+   MAX_CUSTOM_PACKET_SIZE = 1373,
+   HASH_LENGTH = 32,
+   FILE_ID_LENGTH = 32,
+   MAX_FILENAME_LENGTH = 255,
+}
+Tox.__index  = Tox
+
+local function ret_sized(from_raw, name, rawname, ctp, szname)
+   local rawname = rawname or "tox_" .. name
+   local szname  = szname or rawname and rawname .. "_size"
+   local ctp = ctp or "char[?]"
+   return function(self)
+      local sz = from_raw[szname](self.cdata)
+      local ret = ffi.new(ctp, sz)
+      from_raw[rawname](self.cdata, ret)
+      return ffi.string(ret, sz)
+   end
+end
+
+local function def_sized(name, ...)
+   Tox[name] = ret_sized(raw, name, ...)
+end
+
+def_sized("name", "tox_self_get_name")
+def_sized("status_message", "tox_self_get_status_message")
+def_sized("savedata", "tox_get_savedata")
+
+local function ret_set_sized(from_raw, name, rawname, ctp)
+   local rawname = rawname or "tox_" .. name
+   return function(self, to, size, err) 
+      return from_raw[rawname](self.cdata, to, size or #to, err)
+   end
+end
+local function def_set_sized(name, ...)
+   Tox[name] = ret_set_sized(raw, name, ...)
+end
+def_set_sized("set_name", "tox_self_set_name")
+def_set_sized("set_status_message", "tox_self_set_status_message")
+
+local function ret_arg(from_raw, name, rawname, sz, ctp)
+   local rawname = rawname or "tox_" .. name
+   local ctp = ctp or string.format("uint8_t[%d]", sz)
+   assert(sz)
+   return function(self)
+      local ret = ffi.new(ctp)
+      from_raw[rawname](self.cdata, ret)
+      return ffi.string(ret, sz)
+   end
+end
+
+local function def_arg(name, ...)
+   Tox[name] = ret_arg(raw, name, ...)
+end
+def_arg("addr", "tox_self_get_address", Tox.ADDRESS_SIZE)
+def_arg("pubkey", "tox_self_get_public_key", Tox.SECRET_KEY_SIZE)
+def_arg("privkey", "tox_self_get_secret_key", Tox.PUBLIC_KEY_SIZE)
+
 local tox_funlist = {
    bootstrap = false,
-   self_get_name_size = false,
-   self_get_name = true,
-   self_set_name = true,
-   self_get_connection_status = false,
-   self_set_status_message = true,
-   self_get_status_message_size = false,
-   self_get_status_message = true,
-   self_set_status = false,
-   self_get_status = false,
-   self_get_public_key = true,
-   self_get_address = true,
-   self_get_secret_key = true,
+   self_get_connection_status = "connection_status",
+   self_get_status = "status",
+   self_set_status = "set_status",
+
+   self_get_nospam = "nospam",
+   self_set_nospam = "set_nospam",
 
    get_savedata_size = false,
-   get_savedata = true,
 
-   friend_add = true,
-   friend_add_norequest = true,
-   friend_by_public_key = true,
-   self_get_friend_list_size = false,
-   self_get_friend_list = true,
-   self_set_typing = false,
+   self_get_friend_list_size = "friend_cnt",
+
+   self_set_typing = "set_typing",
+
    add_tcp_relay = false,
    file_control = false,
    file_seek = false,
@@ -65,26 +122,10 @@ local tox_funlist = {
    iteration_interval = false,
 }
 
-local Tox = { 
-   __name = "FFI_Tox",
-   TOX_PUBLIC_KEY_SIZE = 32,
-   TOX_SECRET_KEY_SIZE = 32,
-   TOX_ADDRESS_SIZE = 38,
-   TOX_MAX_NAME_LENGTH = 128,
-   TOX_MAX_STATUS_MESSAGE_LENGTH = 1007,
-   TOX_MAX_FRIEND_REQUEST_LENGTH = 1016,
-   TOX_MAX_MESSAGE_LENGTH = 1372,
-   TOX_MAX_CUSTOM_PACKET_SIZE = 1373,
-   TOX_HASH_LENGTH = 32,
-   TOX_FILE_ID_LENGTH = 32,
-   TOX_MAX_FILENAME_LENGTH = 255,
-}
-Tox.__index  = Tox
-
 -- Copy-in either raw or 
-for k, is_raw in pairs(tox_funlist) do
+for k, rename in pairs(tox_funlist) do
    local fun = raw["tox_" .. k]
-   Tox[is_raw and "_" .. k or k] = function(self, ...) return fun(self.cdata, ...) end
+   Tox[rename or k] = function(self, ...) return fun(self.cdata, ...) end
 end
 
 function Tox:_friend_add_fid(fid)
@@ -107,50 +148,23 @@ function Tox:friend_add_norequest(addr)
 end
 
 function Tox.friend_by_pubkey(pubkey)
-   local fid = tox_friend_by_public_key(self.cdata, to_c.addr(pubkey))
+   local fid = raw.tox_friend_by_public_key(self.cdata, to_c.addr(pubkey))
    return self.friends[fid] or self:_friend_add_fid(fid)
 end
 
--- Functions that use a pointer now just return.
-
-local function Tox_ret_via_arg(name, ...) Tox[name] = to_c.ret_via_arg(name, ...) end
-Tox_ret_via_arg("self_get_name")
-Tox_ret_via_arg("self_get_status_message")
-
 function Tox:friends_update()
-   local ret, n = {}, self:self_get_friend_list_size()
+   print("fu")
+   local ret, n = {}, self:friend_cnt()
+   print(n)
    local list = ffi.new("uint32_t[?]", n)
-   self:_self_get_friend_list(list)
+   raw.tox_self_get_friend_list(self.cdata, list)
    local i = 0 
    while i < n do
-      self.friends[list[i]] = ToxFriend.new{fid=list[i], tox=self}
+      self.friends[list[i]] = ToxFriend:new{fid=list[i], tox=self}
       i = i + 1
    end
    return self.friends
 end
-Tox_ret_via_arg("", "uint32_t[?]")
-
-Tox_ret_via_arg("get_savedata", "uint8_t[?]")
-
-local function Tox_ret_via_arg_no_size(name, ...)
-   Tox[name] = to_c.ret_via_args_no_size(name, ...)
-end
-Tox_ret_via_arg_no_size("self_get_public_key")
-Tox_ret_via_arg_no_size("self_get_secret_key")
-Tox_ret_via_arg_no_size("self_get_address", "uint8_t[38]", nil, 38)
-
-function Tox:addr()
-   return to_c.enhex(self:self_get_address(), 38)
-end
-
-function Tox_set_default_size(name, ...)
-   local rawname = "_" .. name
-   Tox[name] = function(self, to, size, err) 
-      return self[rawname](self, to, size or #to, err)
-   end
-end
-Tox_set_default_size("self_set_name")
-Tox_set_default_size("self_status_message")
 
 function Tox:update_callback(name, set_fun)
    local cb_n = "cb_" .. name
@@ -209,10 +223,10 @@ Tox.pubkey_name = "default"
 
 local lfs = require "lfs"  -- Dont understand why no `os.mkdir`
 
-function Tox.new(self)  -- TODO to new convention.
-   self = setmetatable(self, Tox)
-   self:init()
-   return self
+function Tox:new(new)
+   new = setmetatable(new, self)
+   new:init()
+   return new
 end
 
 -- Will use the name to get the current one if needed.
@@ -235,7 +249,9 @@ function Tox:init()
          fd:close()
       end
    end
-   self.cdata = raw.tox_new(opts, data, len or 0, err)
+   print(raw.tox_new)
+   self.cdata = raw.tox_new(nil, nil)
+   print(self.cdata)
    self.friends = {}
    if opts then
       self:friends_update()
@@ -244,7 +260,7 @@ function Tox:init()
          self:default_bootstrap()
       end
    end
-   self:self_set_name(self.name or "(unnamed)")
+   self:set_name(self.use_name or self.name or "(unnamed)")
    return self
 end
 
@@ -253,7 +269,7 @@ function Tox:write_savedata(to_file)
    to_file = (to_file ~= true and to_file) or getenv("HOME") .. "/.tox_comms/savedata"
    local fd = io.open(to_file, "w")
    if fd then
-      fd:write(self:get_savedata())
+      fd:write(self:savedata())
       fd:close()
       return to_file
    else

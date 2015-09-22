@@ -57,7 +57,7 @@ end
 -- Produces a function that converts gets out&converts the return string.
 function Public.ret_via_arg(name, ctp, rawname, szname)
    local rawname = rawname or "_" .. name
-   local szname  = szname  or name .. "_size"
+   local szname  = szname  or "_" .. name .. "_size"
    local ctp = ctp or "char[?]"
    return function(self)
       local sz = self[szname](self)
