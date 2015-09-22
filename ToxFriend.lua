@@ -15,8 +15,9 @@ ToxFriend.__index = ToxFriend
 
 function ToxFriend:new(new)
    local new = setmetatable(new or {}, self)
-   if new.tox then new.cdata = new.tox.cdata end
-   assert(new.cdata)
+   assert(new.tox)
+   new.cdata = new.tox.cdata
+   new.in_groups = {}
    return new
 end
 
@@ -84,6 +85,15 @@ function ToxFriend:file_send_chunk(nr, pos, data)
 end
 function ToxFriend:file_whole_data(nr, data)
    return raw.tox_file_send_chunk(self.cdata, self.fid, nr, 0, to_c.str(data), #data, nil)
+end
+
+-- Group stuff.
+function ToxFriend:join_groupchat(data)
+   return self._add_group_gid(raw.tox_join_groupchat(self.cdata, self.fid, data, #data))
+end
+
+function ToxFriend:invite_group(group)
+   return raw.tox_invite_friend(self.cdata, self.fid, group.gid)
 end
 
 return ToxFriend

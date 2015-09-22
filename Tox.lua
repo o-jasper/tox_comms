@@ -1,4 +1,4 @@
---  Copyright (C) 07-09-2015 Jasper den Ouden.
+--  Copyright (C) 22-09-2015 Jasper den Ouden.
 --
 --  This is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published
@@ -7,8 +7,6 @@
 
 local ffi = require "ffi"
 local to_c = require "tox_comms.ffi.to_c"
-
-local ToxFriend = require "tox_comms.ToxFriend"
 
 local raw = require "tox_comms.ffi.raw"
 
@@ -27,6 +25,9 @@ local Tox = {
    MAX_FILENAME_LENGTH = 255,
 }
 Tox.__index  = Tox
+
+Tox.Friend = require "tox_comms.ToxFriend"
+Tox.Group  = require "tox_comms.ToxGroup"
 
 local function ret_sized(from_raw, name, rawname, ctp, szname)
    local rawname = rawname or "tox_" .. name
@@ -134,8 +135,14 @@ for k, rename in pairs(tox_funlist) do
    Tox[rename or k] = function(self, ...) return fun(self.cdata, ...) end
 end
 
-function Tox:_add_friend_fid(fid)
-   local friend = ToxFriend:new{fid=fid, tox=self}
+function Tox:_ensure_gid(gid)
+   local group = self.groups[gid] or self.Group:new{gid=gid, tox=self}
+   self.groups[gid] = group
+   return group
+end
+
+function Tox:_ensure_fid(fid)
+   local friend = self.friends[fid] or self.Friend:new{fid=fid, tox=self}
    self.friends[fid] = friend
    return friend
 end
@@ -144,18 +151,18 @@ Tox.default_add_friend_msg = "No message"
 function Tox:add_friend(addr, comment)
    local addr, _comment = to_c.addr(addr), to_c.str(comment or self.default_add_friend_msg)
    local fid = raw.tox_friend_add(self.cdata, addr, _comment, #comment, nil)
-   return self:_add_friend_fid(fid)
+   return self:_ensure_fid(fid)
 end
 
 function Tox:add_friend_norequest(addr)
    local addr = to_c.addr(addr)
    local fid = raw.tox_friend_add_norequest(self.cdata, addr, nil)
-   return self:_add_friend_fid(fid)
+   return self:_ensure_fid(fid)
 end
 
 function Tox.friend_by_pubkey(pubkey)
    local fid = raw.tox_friend_by_public_key(self.cdata, to_c.addr(pubkey))
-   return self.friends[fid] or self:_add_friend_fid(fid)
+   return self:_ensure_fid(fid)
 end
 
 function Tox:friends_update()
@@ -165,7 +172,7 @@ function Tox:friends_update()
    local i = 0 
    while i < n do
       assert(self)
-      self.friends[list[i]] = ToxFriend:new{fid=list[i], tox=self}
+      self.friends[list[i]] = self.Friend:new{fid=list[i], tox=self}
       i = i + 1
    end
    return self.friends
@@ -181,10 +188,9 @@ end
 function Tox:update_friend_callback(name, set_fun)
    local own_cb = self["cb_friend_" .. name] or set_fun
    self["cb_friend_" .. name] = own_cb
-   local friends_dict = self.friends
    local function cb(tox_cdata, fid, ...)
-      local friend = friends_dict[fid]
-      local friend_cb = friend and friend["cb_" .. name]
+      local friend = self:_ensure_fid(fid)
+      local friend_cb = friend["cb_" .. name]
       if friend_cb then
          friend_cb(friend, ...)
       end
@@ -196,16 +202,11 @@ function Tox:update_friend_callback(name, set_fun)
 end
 
 function Tox:update_group_callback(name, set_fun)
-   local group_dict = self.groups
-
-   local function cb(tox_cdata, group_id, peernumber, ...)
-      local group = group_dict[group_id]
-      if group then
-         local friend = group.friends[peernumber]
-         group["cb_" .. name](group, friend, ...)
-      end
+   local function cb(tox_cdata, gid, peernumber, ...)
+      local group = self:_ensure_gid(gid)
+      group["cb_" .. name](group, group:peerfriend(peernumber), ...)
    end
-   self["callback_group_" .. name](self, cb, nil)
+   raw["tox_callback_group_" .. name](self.cdata, cb, nil)
 end
 
 local function readall(fd)
@@ -264,7 +265,15 @@ function Tox:init()
          self:default_bootstrap()
       end
    end
+   self.groups = {}
    self:set_name(self.use_name or self.name or "(unnamed)")
+
+   if self.auto_friend_list then  -- Automatically keep friend lists.
+      self:update_callback("friend_request", function(cdata, addr)
+          self:add_friend_norequest(addr)
+      end)
+   end
+
    return self
 end
 
