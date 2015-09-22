@@ -105,21 +105,21 @@ local tox_funlist = {
    self_get_udp_port = false,
    self_get_tcp_port = false,
 
-   callback_self_connection_status = false,
-   callback_friend_name = false,
-   callback_friend_status_message = false,
-   callback_friend_status = false,
-   callback_friend_connection_status = false,
-   callback_friend_typing = false,
-   callback_friend_read_receipt = false,
-   callback_friend_request = false,
-   callback_friend_message = false,
-   callback_file_recv_control = false,
-   callback_file_chunk_request = false,
-   callback_file_recv = false,
-   callback_file_recv_chunk = false,
-   callback_friend_lossy_packet = false,
-   callback_friend_lossless_packet = false,
+--   callback_self_connection_status = false,
+--   callback_friend_name = false,
+--   callback_friend_status_message = false,
+--   callback_friend_status = false,
+--   callback_friend_connection_status = false,
+--   callback_friend_typing = false,
+--   callback_friend_read_receipt = false,
+--   callback_friend_request = false,
+--   callback_friend_message = false,
+--   callback_file_recv_control = false,
+--   callback_file_chunk_request = false,
+--   callback_file_recv = false,
+--   callback_file_recv_chunk = false,
+--   callback_friend_lossy_packet = false,
+--   callback_friend_lossless_packet = false,
 
    iterate = false,
    iteration_interval = false,
@@ -170,7 +170,7 @@ end
 function Tox:update_callback(name, set_fun)
    local cb_n = "cb_" .. name
    self[cb_n] = self[cb_n] or set_fun
-   self["callback_" .. name](self, self[cb_n], nil)
+   raw["tox_callback_" .. name](self.cdata, self[cb_n], nil)
 end
 
 -- Note: can skip some work if none of the friends are treated differently.
@@ -188,7 +188,7 @@ function Tox:update_friend_callback(name, set_fun)
          own_cb(self, friend, ...)
       end
    end
-   self["callback_friend_" .. name](self, cb, nil)
+   raw["tox_callback_friend_" .. name](self.cdata, cb, nil)
 end
 
 function Tox:update_group_callback(name, set_fun)
@@ -197,7 +197,7 @@ function Tox:update_group_callback(name, set_fun)
    local function cb(tox_cdata, group_id, peernumber, ...)
       local group = group_dict[group_id]
       if group then
-         local friend = group.friends[peerenumber]
+         local friend = group.friends[peernumber]
          group["cb_" .. name](group, friend, ...)
       end
    end
