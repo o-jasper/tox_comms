@@ -10,11 +10,15 @@ local access = require("tox_comms.Cmd.Access"):new()
 local ToxFriend = require "tox_comms.ToxFriend"
 
 local This = {}
+
+local Cmd = require "tox_comms.Cmd"
+for k,v in pairs(Cmd) do This[k] = v end
+
 for k,v in pairs(ToxFriend) do
    This[k] = v
 end
-local Cmd = require "tox_comms.Cmd"
-for k,v in pairs(Cmd) do This[k] = v end
+
+This.msg = ToxFriend.msg  -- Just to be clear, otherwise, it will only print them!
 
 This.cmds = {}
 for k,v in pairs(Cmd.cmds) do This.cmds[k] = v end
@@ -155,7 +159,7 @@ function This.cmds:onbehalf(input)
       local msg = string.match(input, "[%s]+(.+)$")
       local f = figure_friend(self, addr)
       if f then
-         f:on_message(0, input)
+         f:cb_message(0, input)
          return "sent message acted as from that addr."
       else
          return "Couldnt find that friend"
@@ -302,11 +306,7 @@ function This.cmds:bset(var, to_str)
    end
 end
 
-function This:msg(text)
-   self.friend:send_message(text)
-end
-
-function This:on_message(kind, msg)
+function This:cb_message(kind, msg)
    local perms = self.permissions
    if string.sub(msg, 1, 1) == "." then
       local any = perms.any_cmds
@@ -324,13 +324,13 @@ function This:on_message(kind, msg)
    end
 end
 
-function This:on_connection_status(status)
+function This:cb_connection_status(status)
    print("status", status)
 end
 
 This.say_hello = "Hello! I am a bot!"
 This.max_namelen = 100
-function This:on_status_message(msg)
+function This:cb_status_message(msg)
    if self.say_hello and not self.said_hello then
       self.said_hello = true
       local perms = self.permissions
@@ -340,7 +340,7 @@ function This:on_status_message(msg)
    print("status_msg", msg)
    self.status_msg = string.sub(msg, 1, self.max_namelen)
 end
-function This:on_name(name)
+function This:cb_name(name)
    self.name = string.sub(name, 1, self.max_namelen)
 end
 
