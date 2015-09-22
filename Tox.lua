@@ -71,12 +71,15 @@ local function ret_arg(from_raw, name, rawname, sz, ctp)
    end
 end
 
-local function def_arg(name, ...)
-   Tox[name] = ret_arg(raw, name, ...)
+local function def_arg_enhex(name, rawname, sz, ...)
+   local ret_arg = ret_arg(raw, name, rawname, sz, ...)
+   Tox[name] = function(name, ...)
+      return to_c.enhex(ret_arg(name, ...), sz)
+   end
 end
-def_arg("addr", "tox_self_get_address", Tox.ADDRESS_SIZE)
-def_arg("pubkey", "tox_self_get_public_key", Tox.SECRET_KEY_SIZE)
-def_arg("privkey", "tox_self_get_secret_key", Tox.PUBLIC_KEY_SIZE)
+def_arg_enhex("addr", "tox_self_get_address", Tox.ADDRESS_SIZE)
+def_arg_enhex("pubkey", "tox_self_get_public_key", Tox.SECRET_KEY_SIZE)
+def_arg_enhex("privkey", "tox_self_get_secret_key", Tox.PUBLIC_KEY_SIZE)
 
 local tox_funlist = {
    bootstrap = false,
@@ -153,9 +156,7 @@ function Tox.friend_by_pubkey(pubkey)
 end
 
 function Tox:friends_update()
-   print("fu")
    local ret, n = {}, self:friend_cnt()
-   print(n)
    local list = ffi.new("uint32_t[?]", n)
    raw.tox_self_get_friend_list(self.cdata, list)
    local i = 0 
@@ -249,9 +250,8 @@ function Tox:init()
          fd:close()
       end
    end
-   print(raw.tox_new)
-   self.cdata = raw.tox_new(nil, nil)
-   print(self.cdata)
+   self.cdata = raw.tox_new(opts, nil)
+
    self.friends = {}
    if opts then
       self:friends_update()
