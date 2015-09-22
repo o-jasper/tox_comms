@@ -81,7 +81,7 @@ typedef enum TOX_ERR_NEW {
 
 typedef struct Tox Tox;
 
-Tox *tox_new(const struct Tox_Options *options, const uint8_t *data, size_t length, enum TOX_ERR_NEW *error);
+Tox *tox_new(const struct Tox_Options *options, enum TOX_ERR_NEW *error);
 
 void tox_kill(Tox *tox);
 
@@ -596,10 +596,6 @@ typedef void tox_friend_lossless_packet_cb(Tox *tox, uint32_t friend_number, con
 
 void tox_callback_friend_lossless_packet(Tox *tox, tox_friend_lossless_packet_cb *callback, void *user_data);
 
-
-
-
-
 void tox_self_get_dht_id(const Tox *tox, uint8_t *dht_id);
 
 typedef enum TOX_ERR_GET_PORT {
@@ -614,3 +610,63 @@ typedef enum TOX_ERR_GET_PORT {
 uint16_t tox_self_get_udp_port(const Tox *tox, TOX_ERR_GET_PORT *error);
 
 uint16_t tox_self_get_tcp_port(const Tox *tox, TOX_ERR_GET_PORT *error);
+
+
+enum {
+    TOX_GROUPCHAT_TYPE_TEXT,
+    TOX_GROUPCHAT_TYPE_AV
+};
+
+void tox_callback_group_invite(Tox *tox, void (*function)(Tox *tox, int32_t, uint8_t, const uint8_t *, uint16_t,
+                               void *), void *userdata);
+
+void tox_callback_group_message(Tox *tox, void (*function)(Tox *tox, int, int, const uint8_t *, uint16_t, void *),
+                                void *userdata);
+
+void tox_callback_group_action(Tox *tox, void (*function)(Tox *tox, int, int, const uint8_t *, uint16_t, void *),
+                               void *userdata);
+
+void tox_callback_group_title(Tox *tox, void (*function)(Tox *tox, int, int, const uint8_t *, uint8_t,
+                              void *), void *userdata);
+
+typedef enum {
+    TOX_CHAT_CHANGE_PEER_ADD,
+    TOX_CHAT_CHANGE_PEER_DEL,
+    TOX_CHAT_CHANGE_PEER_NAME,
+} TOX_CHAT_CHANGE;
+
+void tox_callback_group_namelist_change(Tox *tox, void (*function)(Tox *tox, int, int, uint8_t, void *),
+                                        void *userdata);
+
+int tox_add_groupchat(Tox *tox);
+
+int tox_del_groupchat(Tox *tox, int groupnumber);
+
+int tox_group_peername(const Tox *tox, int groupnumber, int peernumber, uint8_t *name);
+
+int tox_group_peer_pubkey(const Tox *tox, int groupnumber, int peernumber, uint8_t *public_key);
+
+int tox_invite_friend(Tox *tox, int32_t friendnumber, int groupnumber);
+
+int tox_join_groupchat(Tox *tox, int32_t friendnumber, const uint8_t *data, uint16_t length);
+
+int tox_group_message_send(Tox *tox, int groupnumber, const uint8_t *message, uint16_t length);
+
+int tox_group_action_send(Tox *tox, int groupnumber, const uint8_t *action, uint16_t length);
+
+int tox_group_set_title(Tox *tox, int groupnumber, const uint8_t *title, uint8_t length);
+
+int tox_group_get_title(Tox *tox, int groupnumber, uint8_t *title, uint32_t max_length);
+
+unsigned int tox_group_peernumber_is_ours(const Tox *tox, int groupnumber, int peernumber);
+
+int tox_group_number_peers(const Tox *tox, int groupnumber);
+
+int tox_group_get_names(const Tox *tox, int groupnumber, uint8_t** names, uint16_t lengths[],
+                        uint16_t length);
+
+uint32_t tox_count_chatlist(const Tox *tox);
+
+uint32_t tox_get_chatlist(const Tox *tox, int32_t *out_list, uint32_t list_size);
+
+int tox_group_get_type(const Tox *tox, int groupnumber);
