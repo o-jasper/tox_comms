@@ -15,10 +15,14 @@ ToxFriend.__index = ToxFriend
 
 function ToxFriend:new(new)
    local new = setmetatable(new or {}, self)
-   assert(new.tox)
-   new.cdata = new.tox.cdata
-   new.in_groups = {}
+   new:init()
    return new
+end
+
+function ToxFriend:init()
+   assert(self.tox)
+   self.cdata = self.tox.cdata
+   self.in_groups = {}
 end
 
 -- TODO `delete` takes more..
