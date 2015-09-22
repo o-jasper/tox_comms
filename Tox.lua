@@ -188,14 +188,19 @@ end
 function Tox:update_friend_callback(name, set_fun)
    local own_cb = self["cb_friend_" .. name] or set_fun
    self["cb_friend_" .. name] = own_cb
+   local argsfix = {
+      name = ffi.string, status_message=ffi.string,
+      message = function(kind, msg, msg_sz) return kind, ffi.string(msg, msg_sz) end,
+   }
+   local fun = argsfix[name] or function(...) return ... end
    local function cb(tox_cdata, fid, ...)
       local friend = self:_ensure_fid(fid)
       local friend_cb = friend["cb_" .. name]
       if friend_cb then
-         friend_cb(friend, ...)
+         friend_cb(friend, fun(...))
       end
       if own_cb then
-         own_cb(self, friend, ...)
+         own_cb(self, friend, fun(...))
       end
    end
    raw["tox_callback_friend_" .. name](self.cdata, cb, nil)
@@ -230,7 +235,7 @@ Tox.pubkey_name = "default"
 local lfs = require "lfs"  -- Dont understand why no `os.mkdir`
 
 function Tox:new(new)
-   new = setmetatable(new, self)
+   new = setmetatable(new or {}, self)
    new:init()
    return new
 end
@@ -267,6 +272,7 @@ function Tox:init()
    end
    self.groups = {}
    self:set_name(self.use_name or self.name or "(unnamed)")
+   self:set_status_message(self.use_status_message or "(no status message)")
 
    if self.auto_friend_list then  -- Automatically keep friend lists.
       self:update_callback("friend_request", function(cdata, addr)
