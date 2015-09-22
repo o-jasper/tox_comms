@@ -6,6 +6,7 @@
 --  (at your option) any later version.
 
 local ffi = require "ffi"
+local raw = require "tox_comms.ffi.raw"
 local Tox = require "tox_comms.Tox"
 
 local Bot = {}
@@ -124,7 +125,7 @@ function Bot:init()
       end
    end
    local function friend_respond_to(name, handle)
-      tox["callback_friend_" .. name](tox, friend_responder(name, handle), nil)
+      raw["tox_callback_friend_" .. name](tox.cdata, friend_responder(name, handle), nil)
    end
    friend_respond_to("name", ffi.string)
    friend_respond_to("status_message", ffi.string)
