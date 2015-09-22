@@ -1,4 +1,4 @@
---  Copyright (C) 06-09-2015 Jasper den Ouden.
+--  Copyright (C) 22-09-2015 Jasper den Ouden.
 --
 --  This is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published
@@ -6,33 +6,26 @@
 --  (at your option) any later version.
 
 local access = require("tox_comms.Cmd.Access"):new()
-local Cmd = require "tox_comms.Cmd"
+
+local ToxFriend = require "tox_comms.ToxFriend"
 
 local This = {}
+for k,v in pairs(ToxFriend) do
+   This[k] = v
+end
+local Cmd = require "tox_comms.Cmd"
 for k,v in pairs(Cmd) do This[k] = v end
---  Copyright (C) 06-09-2015 Jasper den Ouden.
---
---  This is free software: you can redistribute it and/or modify
---  it under the terms of the GNU General Public License as published
---  by the Free Software Foundation, either version 3 of the License, or
---  (at your option) any later version.
 
 This.cmds = {}
 for k,v in pairs(Cmd.cmds) do This.cmds[k] = v end
 
+This.__index = This
+
+This.new_from_table = This.new
+
 This.cmd_help = {}
 local function cmd_help(...) table.insert(This.cmd_help, {...}) end
 for _,el in ipairs(Cmd.cmd_help) do cmd_help(unpack(el)) end
-
-This.__index = This
-
-function This:new(new)
-   new = setmetatable(new or {}, self)
-   new:init()
-   return new
-end
-
-This.new_from_table= This.new
 
 -- Note.. concept of streams?
 -- (i.e. make a receiver, put things to output into it, tell it to send stuff places)
@@ -55,7 +48,18 @@ cmd_help("fset",       "[var] [val]        -- Set something about a friend.")
 cmd_help("bget",       "[var]              -- Get something about the bot.")
 cmd_help("bset",       "[var] [val]        -- Set something about the bot.")
 
+This.use_file_decode = require "storebin"
+
 function This:init()
+   ToxFriend.init(self)
+
+   local dir = self.dir or self.tox.dir
+   local from_file = dir .. "/friends/" .. self:addr() .. "/self.state"
+   if self.use_file_encode ~= false then
+      local args = self.use_file_decode.file_decode(from_file) or {}
+      for k,v in pairs(args) do self[k] = v end
+   end
+
    --assert(getmetatable(self).__index)--.permissions)
    self.permissions = self.permissions or {
       any_cmds = true,
@@ -77,6 +81,7 @@ function This:init()
    }
 
    self.listeners = {}
+   print("I")
 end
 
 function This.cmds:friendadd(input)
@@ -93,17 +98,15 @@ function This.cmds:friendadd(input)
          return "Dont recognize " .. tostring(perm) .. " as permission."
       end
       print("friend request", addr)
-      self.bot.tox:add_friend(addr, add_msg, #add_msg)
+      self.tox:add_friend(addr, add_msg, #add_msg)
       return "added"
    else
       return "you do not have the permissions for that."
    end
 end
 
-function figure_friend(self, addr)
-   local friends = self.bot.friends
-   local f = friends[addr] or friends[string.sub(addr, 1, 64)]
-   return f
+local function figure_friend(self, addr)
+   return self.tox:friend_by_pubkey(string.sub(addr, 1, 64))
 end
 
 function This.cmds:speakto(input)
@@ -129,7 +132,6 @@ function This.cmds:speakto(input)
       else 
          return "Not sent; what is the message?"
       end
-      --self.self.tox:add_friend(addr,  add_msg, #add_msg)
    else
       return "you do not have the permissions for that."
    end
@@ -176,13 +178,13 @@ function This.cmds:listento(addr)
             return "listening.."
          end
       else
-         for pk in pairs(self.bot.friends) do print("*", pk) end
+         for pk in pairs(self.tox.friends) do print("*", pk) end
          print("=", addr)
          return "couldnt find friend of that address (really)"
       end
    else
       if friend then
-         friend:msg(self.addr .. "tried to listen in, did he have the permissions?")
+         friend:msg(self.tox:addr() .. "tried to listen in, did he have the permissions?")
       end
       return "couldnt find friend of that address (not really, lack perms)"
    end
@@ -192,13 +194,13 @@ function This.cmds:about()
    local ret = [[Basic bot with permissions/accessing/cmds template.
 https://github.com/o-jasper/tox_comms]]
    if self.permissions.cmds.addr then
-      return ret .. "\n(this instance:" .. self.bot.tox:addr() .. ")"
+      return ret .. "\n(this instance:" .. self.tox:addr() .. ")"
    end 
    return ret
 end
 
 function This.cmds:addr()
-   return self.bot.tox:addr()
+   return self.tox:addr()
 end
 
 function This.cmds:mail()
@@ -213,20 +215,20 @@ function This.cmds:leave_note(text)
    end
 end
 function This.cmds:stop()
-   self.bot.stop = true
+   self.tox.stop = true
    return "Stopping.. (depends on loop implementation)"
 end
 
 function This.cmds:friends_list()
    local ret = {}
-   for addr, friend in pairs(self.bot.friends) do
+   for addr, friend in pairs(self.tox.friends) do
       table.insert(ret, string.format("%s; %s", friend.assured_name or friend.name, addr))
    end
    return table.concat(ret, "\n")
 end
 
 function This.cmds:save()
-   self.bot:save()
+   self.tox:save()
    return "Saved stuff"
 end
 
@@ -287,14 +289,14 @@ end
 -- Set/get things about the bot.
 function This.cmds:bget(var)
    if self.b_gettable then
-      return access:get(self.bot, string_split(var, "."), self.b_gettable)
+      return access:get(self.tox, string_split(var, "."), self.b_gettable)
    else
       return "Nothing gettable about the bot"
    end
 end
 function This.cmds:bset(var, to_str)
    if self.b_settable then
-      return access:get(self.bot, string_split(var, "."), to_str, self.b_settable)
+      return access:get(self.tox, string_split(var, "."), to_str, self.b_settable)
    else
       return "Nothing settable about the bot"
    end
@@ -317,7 +319,7 @@ function This:on_message(kind, msg)
 
    if not perms.block_listen then
       for addr in pairs(self.listeners) do
-         self.bot.friends[addr]:msg(self.name .. ": " .. msg)
+         self.tox.friends[addr]:msg(self.name .. ": " .. msg)
       end
    end
 end
@@ -354,13 +356,13 @@ function This:export_table()
 end
 
 function This:save()
-   local dir = self.bot.dir .. "/friends/" .. self.addr .. "/"
+   local dir = self.tox.dir .. "/friends/" .. self.addr .. "/"
    os.execute("mkdir -p " .. dir)
 
-   assert( self.bot.use_file_encode ~= false,
+   assert( self.tox.use_file_encode ~= false,
            "Cannot serialize if you disabled file encoding." )
 
-   local file_encode = self.bot.use_file_encode or require("storebin").file_encode
+   local file_encode = self.tox.use_file_encode or require("storebin").file_encode
    assert(file_encode(dir .. "self.state", self:export_table()))
 end
 
