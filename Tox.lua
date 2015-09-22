@@ -12,7 +12,7 @@ local ToxFriend = require "tox_comms.ToxFriend"
 
 local raw = require "tox_comms.ffi.raw"
 
-local Tox = { 
+local Tox = {
    __name = "FFI_Tox",
    PUBLIC_KEY_SIZE = 32,
    SECRET_KEY_SIZE = 32,
@@ -50,7 +50,7 @@ def_sized("savedata", "tox_get_savedata")
 
 local function ret_set_sized(from_raw, name, rawname, ctp)
    local rawname = rawname or "tox_" .. name
-   return function(self, to, size, err) 
+   return function(self, to, size, err)
       return from_raw[rawname](self.cdata, to, size or #to, err)
    end
 end
@@ -132,7 +132,7 @@ for k, rename in pairs(tox_funlist) do
 end
 
 function Tox:_friend_add_fid(fid)
-   local friend = ToxFriend.new{fid=fid, tox=self}
+   local friend = ToxFriend:new{fid=fid, tox=self}
    self.friends[fid] = friend
    return friend
 end

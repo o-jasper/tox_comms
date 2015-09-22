@@ -15,7 +15,8 @@ ToxFriend.__index = ToxFriend
 
 function ToxFriend:new(new)
    local new = setmetatable(new or {}, self)
-   new.cdata = new.tox.cdata
+   if new.tox then new.cdata = new.tox.cdata end
+   assert(new.cdata)
    return new
 end
 
