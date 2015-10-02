@@ -22,8 +22,28 @@ Ontop of that, only minorly differently as originally;
 
 ## TODO
 
+* File sending didnt work?
+
 * Better Tox channel creation.
   + use other things than the message sending. Like the file sending or
     lossless packets.(just redefine `:send_chunk`)
-  + (more speed)Perhaps write more of it in C.
-  + (more bandwidth efficient) better data encoding that json.
+  + Use "something that looks like the `require "json"` package rather than
+    json. I.e. make those like [storebin](https://github.com/o-jasper/storebin)
+    an option.
+
+## Lua Ring
+
+* [lua_Searcher](https://github.com/o-jasper/lua_Searcher) sql formulator including
+  search term, and Sqlite bindings.
+
+* [page_html](https://github.com/o-jasper/page_html) provide some methods on an object,
+  get a html page.(with js)
+
+* [storebin](https://github.com/o-jasper/storebin) converts trees to binary, same
+  interfaces as json package.(plus `file_encode`, `file_decode`)
+  
+* [PegasusJs](https://github.com/o-jasper/PegasusJs), easily RPCs javascript to
+  lua. In pegasus.
+
+* [tox_comms](https://github.com/o-jasper/tox_comms/), lua bindings to Tox and
+  bare bot.
