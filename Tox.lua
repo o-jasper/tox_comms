@@ -160,8 +160,8 @@ function Tox:add_friend_norequest(addr)
    return self:_ensure_fid(fid)
 end
 
-function Tox.friend_by_pubkey(pubkey)
-   local fid = raw.tox_friend_by_public_key(self.cdata, to_c.addr(pubkey))
+function Tox:friend_by_pubkey(pubkey)
+   local fid = raw.tox_friend_by_public_key(self.cdata, to_c.addr(pubkey), nil)
    return self:_ensure_fid(fid)
 end
 
@@ -265,10 +265,8 @@ function Tox:init()
    self.friends = {}
    if opts then
       self:friends_update()
-   else
-      if self.auto_bootstrap then
-         self:default_bootstrap()
-      end
+   elseif self.auto_bootstrap then  -- TODO do we know nodes already?
+      self:default_bootstrap()
    end
    self.groups = {}
    self:set_name(self.use_name or self.name or "(unnamed)")

@@ -48,7 +48,7 @@ function Bot:init()
    end
 
    self:update_callback("friend_request", function(cdata, addr)
-      self:ensure_friend(self:add_friend_norequest(addr))
+      self:add_friend_norequest(addr)
    end)
 end
 

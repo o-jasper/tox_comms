@@ -46,8 +46,8 @@ cmd_help("stop",       "                   -- Stops the bot.")
 cmd_help("save",       "                   -- Make it save everything.")
 
 cmd_help("friend_edit","[friend addr]      -- Indicate which friend to next change permissions of.")
-cmd_help("get",       "[var]              -- Get something about a friend.")
-cmd_help("set",       "[var] [val]        -- Set something about a friend.")
+cmd_help("fget",       "[var]              -- Get something about a friend.")
+cmd_help("fset",       "[var] [val]        -- Set something about a friend.")
 
 This.use_file_decode = require "storebin"
 
@@ -118,7 +118,7 @@ function This.cmds:speakto(input)
    if perm then
       if msg then
          if perm == "name_friend" then
-            add_msg = add_msg .. " From: " .. self.friend:addr()
+            add_msg = add_msg .. " From: " .. self:addr()
          elseif type(perm) == "table" then
             return "this sort of permission not yet implemented.(thus denied)"
          end
@@ -250,7 +250,7 @@ function This.cmds:friend_edit(addr)
    end
 end
 
-function This.cmds:get(var)
+function This.cmds:fget(var)
    if self.edit_friend_info then
       local friend = self.edit_friend
       if not friend then return "No editable friend specified" end
@@ -270,7 +270,7 @@ function This.cmds:get(var)
    return "Nothing gettable about friends."
 end
 
-function This.cmds:set(var, to_str)
+function This.cmds:fset(var, to_str)
    if self.edit_friend_info then
       local friend = self.edit_friend
       if not friend then return "No editable friend specified" end
