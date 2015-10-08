@@ -34,16 +34,21 @@ strive for API:
 
 Then from the edge:
 
-* `e:pass_claim(i, name, ...)` information received from contact claiming:
+* `e:see_claim(i, name, ...)` information received from contact claiming:
   `e.allow_claims` indicate which are allowed, default:
   + `"name"`, main name, followed by single name
   + `"status_message"` Status message
-* `e:pass_msg(i, kind, message)` receive a message.
-* `contact:pass_missed(i, fi, ti)` claim range of messages missed.
-* `contact.name` is the name to actually use. `contact.request_name` is requested one,
+* `e:see_msg(i, kind, message)` receive a message.
+* `e:see_friend_request(i, message)` friend request.
+* `e:see_missed(i, fi, ti)` claim range of messages missed.
+
+* `e:do_claim` and `e:do_msg` are the active versions, you call these, and
+  they do do the acts, or return `true` for inability.
+
+* `e.name` is the name to actually use. `e.request_name` is requested one,
   if not accepted/denied.
-* `contact.claims` contains current claims.
-* `contact.history` history claims.
+* `e.claims` contains current claims.
+* `e.history` history claims.
 
 ## TODO
 
