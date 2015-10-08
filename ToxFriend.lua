@@ -33,7 +33,7 @@ for k,v in pairs({delete=false, exists=false, get_status="status",
    ToxFriend[name] = function(self) raw[c_name](self.cdata, self.fid) end
 end
 
-function ToxFriend:status_messsage()
+function ToxFriend:status_message()
    local sz = raw.tox_friend_get_status_message_size(self.cdata, self.fid, nil)
    local ret = ffi.new("uint8_t[?]", sz)
    raw.tox_friend_get_status_message_size(self.cdata, self.fid, ret, nil)

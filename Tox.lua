@@ -214,15 +214,6 @@ function Tox:update_group_callback(name, set_fun)
    raw["tox_callback_group_" .. name](self.cdata, cb, nil)
 end
 
-local function readall(fd)
-   local ret, more = "", fd:read(1024)
-   while more do
-      ret = ret .. more
-      more = fd:read(1024)
-   end
-   return ret
-end
-
 function Tox:default_bootstrap()
    local option_list = require "tox_comms.data.settings"
    local use = option_list[math.random(#option_list)]
@@ -254,7 +245,7 @@ function Tox:init()
       if fd then
          opts = raw.tox_options_new(nil)
          opts.savedata_type = 1  -- TOX_SAVEDATA_TYPE_TOX_SAVE
-         local got = readall(fd)
+         local got = fd:read("*a")
          opts.savedata_length = #got
          opts.savedata_data = to_c.str(got)
          fd:close()
