@@ -20,6 +20,31 @@ Ontop of that, only minorly differently as originally;
   the function is marked as returnable. `data_cb.json_ret` will use the
   `return_callback` with the data.
 
+## Chat
+
+Initially, to my annoyance, i wrote something too tied to Tox. In future
+strive for API:
+
+* `:ensure_edge(from_addr, to_addr)` &rarr; `e` an edge between those two users.
+  If you control the `from_addr`, then it sends data.
+
+  if you control the `to_addr` it pretend-sends it.
+
+* `:block(from_addr, [to_addr])` set that to false, blocking it.
+
+Then from the edge:
+
+* `e:pass_claim(i, name, ...)` information received from contact claiming:
+  `e.allow_claims` indicate which are allowed, default:
+  + `"name"`, main name, followed by single name
+  + `"status_message"` Status message
+* `e:pass_msg(i, kind, message)` receive a message.
+* `contact:pass_missed(i, fi, ti)` claim range of messages missed.
+* `contact.name` is the name to actually use. `contact.request_name` is requested one,
+  if not accepted/denied.
+* `contact.claims` contains current claims.
+* `contact.history` history claims.
+
 ## TODO
 
 * File sending didnt work?
