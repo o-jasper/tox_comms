@@ -5,6 +5,7 @@
 --  by the Free Software Foundation, either version 3 of the License, or
 --  (at your option) any later version.
 
+local ffi = require "ffi"
 local raw = require "tox_comms.ffi.raw"
 local to_c = require "tox_comms.ffi.to_c"
 
@@ -42,7 +43,7 @@ function This:init_recv_callbacks()
    self:update_friend_callback("message", message)
 
    local function friend_request(cdata, from_addr, msg, msg_sz)
-      self:add_friend_norequest(addr)
+      self:add_friend_norequest(from_addr)
       edgechat:ensure_edge(addr, from_addr):see_friend_request(nil, ffi.string(msg, msg_sz))
    end
    self:update_callback("friend_request", friend_request)

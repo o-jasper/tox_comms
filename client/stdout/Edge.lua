@@ -17,4 +17,8 @@ function This:see_missed(...)
    print(self.addr, "MISSED", ...)
 end
 
+function This:see_friend_request(...)
+   print(self.addr, "FR", ...)
+end
+
 return This

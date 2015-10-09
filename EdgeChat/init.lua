@@ -15,7 +15,8 @@ function This:init()
    self.doers = self.doers or {}
 end
 
-local function ensure_from(edges, from_addr)
+function This:ensure_from(from_addr)
+   local edges = self.edges
    local dict = edges[from_addr]
    if not dict then
       if dict == false then return false end
@@ -26,7 +27,7 @@ local function ensure_from(edges, from_addr)
 end
 
 function This:ensure_edge(from_addr, to_addr, Creator)
-   local dict = ensure_from(self.edges, from_addr)
+   local dict = self:ensure_from(from_addr)
 
    local e = dict[to_addr]
    if not e then
