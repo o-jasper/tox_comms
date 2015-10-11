@@ -1,9 +1,9 @@
-local EdgeTox  = require "tox_comms.EdgeTox"
+local DoTox  = require "tox_comms.do.Tox"
 local EdgeChat = require "tox_comms.EdgeChat"
 
 local Edge = require "tox_comms.client.stdout.Edge"
 
-local bot = EdgeTox:new{ savedata_file=true, edgechat = EdgeChat:new{Edge=Edge} }
+local bot = DoTox:new{ savedata_file=true, edgechat = EdgeChat:new{Edge=Edge} }
 
 print("My addr", bot:addr())
 

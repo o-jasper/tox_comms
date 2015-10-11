@@ -9,7 +9,7 @@ local ffi = require "ffi"
 local raw = require "tox_comms.ffi.raw"
 local to_c = require "tox_comms.ffi.to_c"
 
-local Bare = require "tox_comms.EdgeTox.Bare"
+local Bare = require "tox_comms.do.Tox.Bare"
 
 local This = {}
 for k,v in pairs(Bare) do This[k] = v end
