@@ -86,11 +86,12 @@ function Bare:save()
    self:write_savedata(self.dir .. "/savedata")
 end
 
+-- Start the loop for Tox to do its thing.
 function Bare:loop()
-   local socket = require "socket"
+   local sleep = require("socket").sleep
    while true do
       self:iterate()
-      socket.sleep(self:iteration_interval()/1000.0)
+      sleep(self:iteration_interval()/1000.0)
    end
 end
 
