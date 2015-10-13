@@ -22,10 +22,13 @@ end
 
 print "Making pages"
 local server = require("page_html.serve.pegasus"):new()
-server:add(req("Aliasses"):new{
-   edge_toxes = edge_toxes,
-   edgechat = edgechat,
-})
+
+local function mkpg(name)
+   return req(name):new{edge_toxes = edge_toxes, edgechat = edgechat }
+end
+
+server:add(mkpg "Aliasses")
+server:add(mkpg "Contacts")
 
 print("Starting server")
 server:prepare()

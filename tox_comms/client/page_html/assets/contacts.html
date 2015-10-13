@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{%title}</title>
+
+    {%inject_js}
+    <script>{%js/common.js}</script>
+</head>
+<body> 
+ 
+  <button onclick="contacts_update();">Update</button> <span id="cnt">no</span> results.
+  <table id="list">
+  </table>
+
+  <script>
+    {%js/contacts_update.js}
+    contacts_update("{%fa}");
+  </script>
+</body>
+</html>
