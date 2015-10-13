@@ -1,5 +1,7 @@
 function aliasses_update() {
     var addrs = tox_addrs();
+    ge("cnt").textContent = addrs.length;
+
     var html = ""
     for(i in addrs) {  // TODO claims of self?
         html = html + '<tr><td><a href="/contacts/' + addrs[i] + '">' + 
