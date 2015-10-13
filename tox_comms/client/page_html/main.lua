@@ -7,9 +7,8 @@ local edgechat = EdgeChat:new{ Edge=req "Edge" }
 local tox = require("tox_comms.do.Tox"):new{ savedata_file=true, edgechat=edgechat }
 
 if arg[1] then
-   local et = self.edge_toxes[1]
-   print("Adding friend", arg[1], "to", et:addr())
-         et:add_friend(arg[1], "Yello")
+   print("Adding friend", arg[1], "to", tox:addr(),
+         tox:add_friend(arg[1], "Yello"))
 end
 
 local edge_toxes = { tox, }

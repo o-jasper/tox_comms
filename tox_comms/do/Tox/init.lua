@@ -18,10 +18,6 @@ This.__index = This
 function This:init()
    Bare.init(self)
 
-   self:init_recv_callbacks()
-end
-
-function This:init_recv_callbacks()
    local edgechat, addr = assert(self.edgechat), self:addr()
    edgechat.doers[addr] = self
 
@@ -50,6 +46,7 @@ function This:init_recv_callbacks()
 end
 
 function This:do_claim(to, i, name, what)
+   -- NOTE: not particular to other side.
    if name == "status_message" then
       assert(type(what) == "string")
       raw.tox_self_set_status_message(self.cdata, what, #what, nil)
@@ -59,6 +56,11 @@ function This:do_claim(to, i, name, what)
    else
       print("Dunno how to do", name)
    end
+end
+
+function This:add_friend(addr, msg)
+   Bare.add_friend(self, addr, msg)
+   self.edgechat:ensure_edge(self:addr(), addr)
 end
 
 function This:do_msg(to_addr, i, kind, message)
