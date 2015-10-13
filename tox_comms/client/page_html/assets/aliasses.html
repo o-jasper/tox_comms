@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{%title}</title>
+
+    {%inject_js}
+    <script>{%js/common.js}</script>
+</head>
+<body> 
+ 
+  <button onclick="aliasses_update();">Update</button>
+  <table id="list">
+  </table>
+
+  <script>
+    {%js/aliasses_update.js}
+    aliasses_update();
+  </script>
+</body>
+</html>
