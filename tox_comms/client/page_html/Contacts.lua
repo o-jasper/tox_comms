@@ -1,8 +1,3 @@
-
-local Edge = require "tox_comms.client.page_html.Edge"
-
-local Assets = require "page_html.Assets"
-
 local Page = {}
 for k,v in pairs(require "tox_comms.client.page_html.BasePage") do Page[k] = v end
 Page.__index = Page
@@ -10,8 +5,7 @@ Page.__index = Page
 Page.name = "contacts"
 
 function Page:repl(state)
-   local fa = string.match(state.rest_path or ">_<", "[%x]+/?") or self.edge_toxes[1]:addr()
-   print("**", state.rest_path, fa)
+   local fa = string.match(state.rest_path or ">_<", "([%x]+)/?") or self.edge_toxes[1]:addr()
    return { fa = fa }
 end
 

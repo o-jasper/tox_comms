@@ -1,8 +1,3 @@
-
-local Edge = require "tox_comms.client.page_html.Edge"
-
-local Assets = require "page_html.Assets"
-
 local Page = {}
 for k,v in pairs(require "tox_comms.client.page_html.BasePage") do Page[k] = v end
 Page.__index = Page
