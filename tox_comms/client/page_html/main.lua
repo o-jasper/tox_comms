@@ -28,6 +28,7 @@ end
 
 server:add(mkpg "Aliasses")
 server:add(mkpg "Contacts")
+server:add(mkpg "Chat")
 
 print("Starting server")
 server:prepare()

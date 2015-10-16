@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{%title}</title>
+
+    {%inject_js}
+    <script>{%js/common.js}</script>
+</head>
+<body> 
+ 
+  <button onclick="chat_update();">Update</button> <span id="cnt">no</span> results.
+  <p id="list">
+  </p>
+
+  <script>
+    {%js/chat_update.js}
+    chat_update();
+  </script>
+</body>
+</html>

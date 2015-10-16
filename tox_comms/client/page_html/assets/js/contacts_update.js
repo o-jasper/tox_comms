@@ -12,7 +12,8 @@ function contacts_update() {
     var html = "<table>";
     for( i in list ){
         var el = list[i];
-        var lhtml = "<tr><td>" + el[0] + ":</td><td>" + el[1].name + "</td></tr>" +
+        var lhtml = '<tr><td><a href="/chat/' + fa + '/' + el[0] +'">' +
+            el[0] + ":</a></td><td>" + el[1].name + "</td></tr>" +
             "<tr><td colspan=2>" + el[1].status_message + "</td></tr>";
         html = html + lhtml;
     }
