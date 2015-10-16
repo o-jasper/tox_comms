@@ -34,29 +34,27 @@ end
 function rpc_js:claims(fa, ta) return function() return edge(self, fa,ta).claims end end
 
 -- Listing events.
-function rpc_js:list_events_after(fa, ta, after_t)
-   return function()
+function rpc_js:list_events_after()
+   return function(fa, ta, after_t)
       return edge(self, fa, ta):list_events_after(after_t)
    end
 end
 
-function rpc_js:list_events_all(fa, ta)
-   return function()
+function rpc_js:list_events_all()
+   return function(fa, ta)
       return edge(self, fa, ta).events
    end
 end
 
 -- Sending events.
-function rpc_js:do_msg(fa,ta, ...)
-   local inp =  {...}
-   return function()
-      return edge(fa, ta):do_msg(unpack(inp))
+function rpc_js:do_msg()
+   return function(fa,ta, ...)
+      return edge(fa, ta):do_msg(...)
    end
 end
-function rpc_js:do_friend_request(fa,ta, ...)
-   local inp = {...}
-   return function()
-      return edge(fa, ta):do_friend_request(unpack(inp))
+function rpc_js:do_friend_request()
+   return function(fa,ta, ...)
+      return edge(fa, ta):do_friend_request(...)
    end
 end
 
