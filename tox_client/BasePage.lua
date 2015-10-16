@@ -11,6 +11,6 @@ function Page:init(new)
    self.edge_toxes = self.edge_toxes or {}
 end
 
-Page.where = { "tox_comms/client/page_html/" }
+Page.where = { "tox_client/" }
 
 return Page

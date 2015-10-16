@@ -1,5 +1,5 @@
 -- Req local.
-local function req(what) return require("tox_comms.client.page_html." .. what) end
+local function req(what) return require("tox_client." .. what) end
 
 local EdgeChat = require "tox_comms.EdgeChat"
 local edgechat = EdgeChat:new{ Edge=req "Edge" }
