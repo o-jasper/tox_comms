@@ -17,7 +17,7 @@ function This:repl()
    if not self._repl then
       self._repl = { fa = self.fa, ta = self.ta, name = self.contact_name }
       -- TODO want to display some history too..
-      for k,v in pairs(self.claims) do self._repl[k] = v end
+      self._repl = setmetatable(self._repl, {__index = self.claims})
    end
    return self._repl
 end

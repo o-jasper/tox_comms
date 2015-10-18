@@ -17,8 +17,7 @@ function This:repl(state)
    if not self._repl then
       self._repl = { kind = self.rest[1], msg = self.rest[2], }
       -- TODO want to display some history too..
-      for k,v in pairs(self) do self._repl[k] = v end
-      self._repl.i = self._repl.i or " "
+      self._repl = setmetatable(self._repl, {__index = self})
    end
    return self._repl
 end
