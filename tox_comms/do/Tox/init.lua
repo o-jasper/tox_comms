@@ -15,6 +15,12 @@ local This = {}
 for k,v in pairs(Bare) do This[k] = v end
 This.__index = This
 
+local function ensure_edge(self, fa, ta)
+   local edge = self.edgechat:ensure_edge(fa,ta)
+   edge.doer = self
+   return edge
+end
+
 function This:init()
    Bare.init(self)
 
@@ -24,23 +30,24 @@ function This:init()
    -- Put in place callbacks that tell the edges stuff bafter receiving.
    local function claim(claim_name)
       return function(cdata, fid, ...)
-         edgechat:ensure_edge(addr, self:ensure_addr(fid)):see_claim(nil, claim_name, ...)
+         ensure_edge(self, addr, self:ensure_addr(fid)):see_claim(nil, claim_name, ...)
       end
    end
-   self:update_friend_callback("name",              claim("name"))
-   self:update_friend_callback("status_message",    claim("status_message"))
-   self:update_friend_callback("status",            claim("status"))
-   self:update_friend_callback("typing",            claim("typing"))
-   self:update_friend_callback("connection_status", claim("connection_status"))
+   self:update_friend_callback("name",               claim("name"))
+   self:update_friend_callback("status_message",     claim("status_message"))
+   self:update_friend_callback("status",             claim("status"))
+   self:update_friend_callback("typing",             claim("typing"))
+   self:update_friend_callback("connection_status",  claim("connection_status"))
 
    local function message(cdata, fid, kind, msg)
-      edgechat:ensure_edge(addr, self:ensure_addr(fid)):see_msg(nil, kind, msg)
+      ensure_edge(self, addr, self:ensure_addr(fid)):see_msg(nil, kind, msg)
    end
    self:update_friend_callback("message", message)
+   self:update_friend_callback("read_receipt", function() end)
 
    local function friend_request(cdata, from_addr, msg, msg_sz)
-      self:add_friend_norequest(from_addr)
-      edgechat:ensure_edge(addr, from_addr):see_friend_request(nil, ffi.string(msg, msg_sz))
+      Bare.add_friend_norequest(self, addr)
+      ensure_edge(self, addr, from_addr):see_friend_request(nil, ffi.string(msg, msg_sz))
    end
    self:update_callback("friend_request", friend_request)
 end
@@ -59,12 +66,13 @@ function This:do_claim(to, i, name, what)
 end
 
 function This:add_friend(addr, msg)
-   Bare.add_friend(self, addr, msg)
-   self.edgechat:ensure_edge(self:addr(), addr)
+   ensure_edge(self, self:addr(), addr)
+   return Bare.add_friend(self, addr, msg)
 end
 
 function This:do_msg(to_addr, i, kind, message)
    local fid = self:ensure_fid(to_addr)
+   print(to_addr, fid, "->", kind, message)
    raw.tox_friend_send_message(self.cdata, fid, kind or 0,
                                to_c.str(message), #message, nil)
 end
