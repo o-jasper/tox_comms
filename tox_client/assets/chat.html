@@ -20,7 +20,7 @@
   </script>
 
   <input id="chat_input" ontouch="touch_chat_input();"
-         onchange="touch_chat_input();" onkeydown="touch_chat_input();"
+         onchange="touch_chat_input();" onkeydown="touch_chat_input(event);"
          onsubmit="send_chat_input();">
   <button id="chat_input_button" onclick="send_chat_input();">S</button>
 </html>
