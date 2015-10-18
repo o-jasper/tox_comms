@@ -17,7 +17,7 @@ end
 function This:clean_events(t)
    if self.keep_time then
       local t, events = t or gettime(), self.events
-      while #events > 0 and events[1][2] > t + self.keep_time do
+      while #events > 0 and events[1].time > t + self.keep_time do
          table.remove(events, 1)
       end
    end
@@ -31,7 +31,7 @@ local function mk_see(name)
          table.insert(rest, tonumber(el) or tostring(el))
       end
       print("*", name, unpack(rest))
-      table.insert(self.events, {name, gettime(), i or false, rest})
+      table.insert(self.events, { tp = name, time = gettime(), i = i or false, rest = rest})
       self:clean_events()
    end
 end
@@ -42,7 +42,7 @@ mk_see("friend_request")
 local function mk_do(name)
    local fullname = "do_" .. name
    This[fullname] = function(self, i, ...)
-      table.insert(self.events, {name, gettime(), i, {...}})  -- Log
+      table.insert(self.events, { tp = name, time = gettime(), i = i, rest = {...}})  -- Log
       self:clean_events()
       PrevEdge[fullname](self, i, ...)  -- Also actually do.
    end
