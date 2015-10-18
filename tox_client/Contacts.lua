@@ -19,7 +19,6 @@ local ret_list = require "tox_client.lib.ret_list"
 local info_on  = require "page_html.info_on"
 function Page.rpc_js:contact_html_list()
    return function (fa, state)
-      print("_", fa, state.html_list)
       local list = {}
       for ta, edge in pairs(self.edgechat:ensure_from(fa)) do
          local ret = { fa = fa, ta = ta }
