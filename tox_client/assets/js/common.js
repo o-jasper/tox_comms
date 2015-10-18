@@ -1,6 +1,5 @@
-
-function ge(id) { 
-    return document.getElementById(id) || {}
+function ge(id) {
+    return document.getElementById(id) || { "empty" : "nothing" };
 }
 
 function set_ids(idvals) {
@@ -14,7 +13,7 @@ function set_ids(idvals) {
     }
 }
 function get_ids(ids) {
-    var ret = {}
+    var ret = {};
     for( k in ids ){ ret[ids[k]] = ge(ids[k]).value; }
     return ret;
 }

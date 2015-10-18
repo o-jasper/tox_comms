@@ -1,4 +1,3 @@
-var fa = "{%fa}", ta = "{%ta}";
 var after_time = 0, ret_cnt = 0;
 
 function chat_update_cb(ret) {

@@ -7,8 +7,9 @@ Page.name = "contacts"
 Page.info_ons = { require "tox_client.info_on.contact.basic" }
 
 function Page:repl(state)
-   local fa = string.match(state.rest_path or ">_<", "([%x]+)/?") or self.edge_toxes[1]:addr()
-   return { fa = fa }
+   local fa = string.match(state.rest_path or ">_<", "^([%x]+)/?$") 
+      or self.edge_toxes[1]:addr()
+   return { fa = fa, js = self:src_js() }
 end
 
 local rpc_js = require "tox_client.rpc_js"
@@ -27,8 +28,8 @@ function Page.rpc_js:contact_html_list()
       end
 
       state.self = self
-
       local info_list = info_on.list(list, state, self.info_ons)
+
       state.where = self.where
       return ret_list(info_list, state)
    end

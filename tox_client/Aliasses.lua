@@ -4,7 +4,7 @@ Page.__index = Page
 
 Page.name = "aliasses"
 
-function Page:repl(state) return {} end
+function Page:repl(state) return { js = self:src_js() } end
 
 local rpc_js = require "tox_client.rpc_js"
 Page.rpc_js = {}

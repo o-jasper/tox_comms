@@ -3,10 +3,12 @@
 <head>
     <meta charset="utf-8">
     <title>{%title}</title>
-
+    
+    <script>fa="{%fa}";ta="{%ta}";</script>
     {%inject_js}
-    <script>{%js/common.js}</script>
-    <script>{%js/chat.js}</script>
+    {%js common}
+    {%js chat}
+    {%js chat_update}
 </head>
 <body> 
  
@@ -14,13 +16,10 @@
   <table id="list">
   </table>
 
-  <script>
-    {%js/chat_update.js}
-    chat_update();
-  </script>
-
   <input id="chat_input" ontouch="touch_chat_input();"
          onchange="touch_chat_input();" onkeydown="touch_chat_input(event);"
          onsubmit="send_chat_input();">
   <button id="chat_input_button" onclick="send_chat_input();">S</button>
+
+  <script>chat_update();</script>
 </html>

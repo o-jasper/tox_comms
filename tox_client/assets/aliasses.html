@@ -5,7 +5,8 @@
     <title>{%title}</title>
 
     {%inject_js}
-    <script>{%js/common.js}</script>
+    {%js common}
+    {%js aliasses_update}
 </head>
 <body> 
  
@@ -13,9 +14,6 @@
   <p id="list">
   </p>
 
-  <script>
-    {%js/aliasses_update.js}
-    aliasses_update();
-  </script>
+  <script>aliasses_update();</script>
 </body>
 </html>

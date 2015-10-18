@@ -4,8 +4,10 @@
     <meta charset="utf-8">
     <title>{%title}</title>
 
+    <script>fa="{%fa}";</script>
     {%inject_js}
-    <script>{%js/common.js}</script>
+    {%js common}
+    {%js contacts_update}
 </head>
 <body> 
  
@@ -13,9 +15,6 @@
   <table id="list">
   </table>
 
-  <script>
-    {%js/contacts_update.js}
-    contacts_update("{%fa}");
-  </script>
+  <script>contacts_update();</script>
 </body>
 </html>

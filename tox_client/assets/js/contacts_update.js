@@ -1,5 +1,3 @@
-var fa = "{%fa}"
-
 function contacts_update_cb(ret) {
     ge("cnt").textContent = ret.cnt;
 
@@ -10,5 +8,6 @@ function contacts_update_cb(ret) {
 }
 
 function contacts_update() {
+    ge("cnt").textContent = "X";
     callback_contact_html_list([fa, {"html_list":true}], contacts_update_cb);
 }

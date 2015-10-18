@@ -10,5 +10,6 @@ function aliasses_update_cb(addrs) {
     ge("list").innerHTML = html + "</table>";    
 }
 function aliasses_update() {
+    ge("cnt").textContent = "X";
     callback_tox_addrs([], aliasses_update_cb);
 }

@@ -7,8 +7,8 @@ Page.name = "chat"
 Page.info_ons = { require "tox_client.info_on.chat.basic" }
 
 function Page:repl(state)
-   local fa,ta = string.match(state.rest_path or ">_<", "([%x]+)/([%x]+)/?")
-   return { fa = fa, ta = ta }
+   local fa,ta = string.match(state.rest_path or ">_<", "^([%x]+)/([%x]+)/?$")
+   return { fa = fa, ta = ta, js = self:src_js() }
 end
 
 local rpc_js = require "tox_client.rpc_js"
