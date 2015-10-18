@@ -38,16 +38,26 @@ local lfs = require "lfs"  -- Dont understand why no `os.mkdir`
 
 Bare.pubkey_name = "default"
 
+local function proper_io_lines(file)
+   local fd = io.open(file)
+   if fd then
+      fd:close()
+      return io.lines(file)
+   else
+      return ipairs{}
+   end
+end
+
 function Bare:init()
    self.fid2addr = {}  -- Fids to addresses.
    self.addr2fid = {}
 
    self.dir = self.dir or os.getenv("HOME") .. "/.tox_comms/" .. self.pubkey_name
+   lfs.mkdir(self.dir)
 
    local opts = nil
    if self.savedata_file then
       if self.savedata_file == true then
-         lfs.mkdir(self.dir)
          self.savedata_file = self.dir .. "/savedata"
       end
       local fd = io.open(self.savedata_file)
@@ -58,6 +68,14 @@ function Bare:init()
          opts.savedata_length = #got
          opts.savedata_data = to_c.str(got)
          fd:close()
+      end
+   end
+   if self.friend_list_file then
+      if self.friend_list_file == true then
+         self.friend_list_file = self.dir .. "/friend_list.txt"
+      end
+      for addr in proper_io_lines(self.friend_list_file) do
+         self:ensure_addr(addr)
       end
    end
    self.cdata = raw.tox_new(opts, nil)
@@ -83,7 +101,14 @@ end
 
 function Bare:save()
    -- Savedata.
-   self:write_savedata(self.dir .. "/savedata")
+   self:write_savedata(self.savedata_file)
+
+   -- Friend list.
+   local fd = io.open(self.friend_list_file, "w")
+   for addr, _ in pairs(self.addr2fid) do
+      fd:write(addr .. "\n")
+   end
+   fd:close()
 end
 
 -- Start the loop for Tox to do its thing.
@@ -125,7 +150,6 @@ function Bare:add_friend(addr, comment)
    self.fid2addr[fid]  = addr
    self.addr2fid[addr] = fid
 end
-
 
 local function ret_sized(from_raw, name, rawname, ctp, szname)
    local rawname = rawname or "tox_" .. name
@@ -221,31 +245,31 @@ for k, rename in pairs(tox_funlist) do
    Bare[rename or k] = function(self, ...) return fun(self.cdata, ...) end
 end
 
-function Bare:update_callback(name, set_fun)
-   raw["tox_callback_" .. name](self.cdata, set_fun, nil)
+function Bare:update_callback(cb_name, set_fun)
+   raw["tox_callback_" .. cb_name](self.cdata, set_fun, nil)
 end
 
-function Bare:update_friend_callback(name, set_fun)
+function Bare:update_friend_callback(cb_name, set_fun)
    local argsfix = {
       name = ffi.string, status_message=ffi.string,
       message = function(kind, msg, msg_sz) return kind, ffi.string(msg, msg_sz) end,
    }
-   local af = argsfix[name]
+   local af = argsfix[cb_name]
    if af then
       local function cb(tox_cdata, fid, ...)
          set_fun(tox_cdata, fid, af(...))
       end
-      raw["tox_callback_friend_" .. name](self.cdata, cb, nil)
+      raw["tox_callback_friend_" .. cb_name](self.cdata, cb, nil)
    else
-      raw["tox_callback_friend_" .. name](self.cdata, set_fun, nil)
+      raw["tox_callback_friend_" .. cb_name](self.cdata, set_fun, nil)
    end
 end
 
-function Bare:update_group_callback(name, set_fun)
+function Bare:update_group_callback(cb_name, set_fun)
    local function cb(tox_cdata, gid, peernumber, ...)
-      group["cb_" .. name](gid, peernumber, ...)
+      group["cb_" .. cb_name](gid, peernumber, ...)
    end
-   raw["tox_callback_group_" .. name](self.cdata, cb, nil)
+   raw["tox_callback_group_" .. cb_name](self.cdata, cb, nil)
 end
 
 return Bare
