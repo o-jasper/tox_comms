@@ -6,16 +6,21 @@
 
     {%inject_js}
     <script>{%js/common.js}</script>
+    <script>{%js/chat.js}</script>
 </head>
 <body> 
  
   <button onclick="chat_update();">Update</button> <span id="cnt">no</span> results.
-  <p id="list">
-  </p>
+  <table id="list">
+  </table>
 
   <script>
     {%js/chat_update.js}
     chat_update();
   </script>
-</body>
+
+  <input id="chat_input" ontouch="touch_chat_input();"
+         onchange="touch_chat_input();" onkeydown="touch_chat_input();"
+         onsubmit="send_chat_input();">
+  <button onclick="send_chat_input();">S</button>
 </html>

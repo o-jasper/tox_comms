@@ -33,4 +33,10 @@ function Page.rpc_js:chat_html_list()
    end
 end
 
+function Page.rpc_js:send_chat()
+   return function(fa, ta, kind, text)
+      self.edgechat:ensure_edge(fa, ta):do_msg(nil, kind, text)
+   end
+end
+
 return Page
