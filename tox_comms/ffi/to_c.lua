@@ -33,13 +33,23 @@ function Public.enhex(arr, sz)
    return ret
 end
 
+function Public.bin(bin)
+   if type(bin) == "cdata" then
+      return bin
+   end
+   bin = type(bin) == "string" and dehex(bin) or bin
+   local ret = ffi.new("uint8_t[?]", #bin)
+   for j, v in ipairs(bin) do ret[j - 1] = v end
+   return ret
+end
+
 function Public.addr(addr)
    if type(addr) == "cdata" then
       return addr
    end
    addr = type(addr) == "string" and dehex(addr) or addr
    local ret = ffi.new("uint8_t[38]")
-   for j, v in pairs(addr) do ret[j - 1] = v end
+   for j, v in ipairs(addr) do ret[j - 1] = v end
    return ret
 end
 
