@@ -1,21 +1,12 @@
 var fa = "{%fa}"
 
 function contacts_update() {
-    var list = contacts_more(fa);  // Contacts with the extra information.
+    var ret = contact_html_list(fa, {"html_list":true});
 
-    if( list.length == undefined ) {
-        ge("cnt").textContent = 0;
-    } else {
-        ge("cnt").textContent = list.length;
-    }
+    ge("cnt").textContent = ret.cnt;
 
     var html = "<table>";
-    for( i in list ){
-        var el = list[i];
-        var lhtml = '<tr><td><a href="/chat/' + fa + '/' + el[0] +'">' +
-            el[0] + ":</a></td><td>" + el[1].name + "</td></tr>" +
-            "<tr><td colspan=2>" + el[1].status_message + "</td></tr>";
-        html = html + lhtml;
-    }
+    var list = ret.html_list;
+    for( i in list ){ html = html + list[i]; }
     ge("list").innerHTML = html + "</table>";
 }
