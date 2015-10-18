@@ -1,10 +1,7 @@
 var fa = "{%fa}", ta = "{%ta}";
 var after_time = 0, ret_cnt = 0;
 
-function chat_update() {
-    // TODO use the callback, of course.
-    var ret = chat_html_list(fa, ta, {"html_list":true, "after_time":after_time});
-
+function chat_update_cb(ret) {
     after_time = ret.last_time;
     ret_cnt += ret.cnt;
 
@@ -19,4 +16,10 @@ function chat_update() {
         el.innerHTML = html_list[i].html;
         list_el.appendChild(el)
     }
+}
+
+function chat_update() {
+    // TODO use the callback, of course.
+    callback_chat_html_list([fa, ta, {"html_list":true, "after_time":after_time}],
+                            chat_update_cb);
 }
