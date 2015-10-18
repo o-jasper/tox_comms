@@ -4,7 +4,8 @@ local function req(what) return require("tox_client." .. what) end
 local EdgeChat = require "tox_comms.EdgeChat"
 local edgechat = EdgeChat:new{ Edge=req "Edge" }
 
-local tox = require("tox_comms.do.Tox"):new{ savedata_file=true, edgechat=edgechat }
+local tox = require("tox_comms.do.Tox"):new{ savedata_file=true, friend_list_file=true,
+                                             edgechat=edgechat }
 print("I am", tox:addr())
 
 if arg[1] then
