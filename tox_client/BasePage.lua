@@ -24,5 +24,11 @@ function Page:src_js()
          self.name, string.sub(x, 2))
    end
 end
+function Page:src_css()
+   return function(x)
+      return string.format([[<style src="/%s/css/%s.css"></style>]],
+         self.name, string.sub(x, 2))
+   end
+end
 
 return Page
