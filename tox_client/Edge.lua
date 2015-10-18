@@ -23,7 +23,7 @@ function This:clean_events(t)
    end
 end
 
-local function mk_see(name)
+local function mk_see(name, after)
    local fullname = "see_" .. name
    This[fullname] = function(self, i, ...)
       local rest = {}
@@ -32,12 +32,13 @@ local function mk_see(name)
       end
       table.insert(self.events, { tp = name, time = gettime(), i = i or false, rest = rest})
       self:clean_events()
+      if after then PrevEdge[fullname](self, i, ...) end
    end
 end
 mk_see("msg")
 mk_see("missed")
 mk_see("friend_request")
-mk_see("claim")
+mk_see("claim", true)
 
 local function mk_do(name)
    local fullname = "do_" .. name
