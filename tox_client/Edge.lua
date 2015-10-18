@@ -30,7 +30,6 @@ local function mk_see(name)
       for _,el in ipairs{...} do
          table.insert(rest, tonumber(el) or tostring(el))
       end
-      print("*", name, unpack(rest))
       table.insert(self.events, { tp = name, time = gettime(), i = i or false, rest = rest})
       self:clean_events()
    end
@@ -38,6 +37,7 @@ end
 mk_see("msg")
 mk_see("missed")
 mk_see("friend_request")
+mk_see("claim")
 
 local function mk_do(name)
    local fullname = "do_" .. name
