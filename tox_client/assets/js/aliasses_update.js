@@ -1,5 +1,5 @@
-function aliasses_update() {
-    var addrs = tox_addrs();
+
+function aliasses_update_cb(addrs) {
     ge("cnt").textContent = addrs.length;
 
     var html = "<table>"
@@ -7,5 +7,8 @@ function aliasses_update() {
         html = html + '<tr><td><a href="/contacts/' + addrs[i] + '">' + 
             addrs[i] + '</a></td></tr>';
     }
-    ge("list").innerHTML = html + "</table>";
+    ge("list").innerHTML = html + "</table>";    
+}
+function aliasses_update() {
+    callback_tox_addrs([], aliasses_update_cb);
 }

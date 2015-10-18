@@ -16,6 +16,7 @@ function chat_update_cb(ret) {
         el.innerHTML = html_list[i].html;
         list_el.appendChild(el)
     }
+    ge("chat_input_button").textContent = "S";
 }
 
 function chat_update() {
