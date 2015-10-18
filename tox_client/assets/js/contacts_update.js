@@ -5,8 +5,8 @@ function contacts_update() {
 
     ge("cnt").textContent = ret.cnt;
 
-    var html = "<table>";
+    var html = ""
     var list = ret.html_list;
-    for( i in list ){ html = html + list[i]; }
-    ge("list").innerHTML = html + "</table>";
+    for( i in list ){ html = html + "<tr>" + list[i].html + "</tr"; }
+    ge("list").innerHTML = html;
 }

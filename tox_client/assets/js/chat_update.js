@@ -1,13 +1,22 @@
-var fa = "{%fa}"
-var ta = "{%ta}"
+var fa = "{%fa}", ta = "{%ta}";
+var after_time = 0, ret_cnt = 0;
 
 function chat_update() {
-    var ret = chat_html_list(fa, ta, {"html_list":true});
+    // TODO use the callback, of course.
+    var ret = chat_html_list(fa, ta, {"html_list":true, "after_time":after_time});
 
-    ge("cnt").textContent = ret.cnt;
+    after_time = ret.last_time;
+    ret_cnt += ret.cnt;
 
-    var html = "<table>";
-    var list = ret.html_list;
-    for( i in list ){ html = html + list[i]; }
-    ge("list").innerHTML = html + "</table>";
+    ge("cnt").textContent = ret_cnt;
+
+    var list_el = ge("list");
+    // List of stuff added at the end.
+    var html_list = ret.html_list;
+    for( i in html_list ){
+        var el = document.createElement("tr");
+        el.id = html_list[i].id;
+        el.innerHTML = html_list[i].html;
+        list_el.appendChild(el)
+    }
 }

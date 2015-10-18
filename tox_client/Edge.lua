@@ -54,9 +54,7 @@ mk_do("friend_request")
 function This:list_events_after(t)
    local ret = {}
    for _, el in ipairs(self.events) do
-      if el[2] > t then
-         table.insert(ret, el)
-      end
+      if el.time > t then table.insert(ret, el) end
    end
    return ret
 end
