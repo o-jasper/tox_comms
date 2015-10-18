@@ -101,27 +101,29 @@ function Bare:ensure_addr(fid)
       local ret = ffi.new("uint8_t[?]", 32)
       raw.tox_friend_get_public_key(self.cdata, fid, ret, nil)
       addr = to_c.enhex(ret, 32)
-      self.fid2addr[fid] = addr
+      self.fid2addr[fid]  = addr
       self.addr2fid[addr] = fid
    end
    return addr
 end
 
 function Bare:ensure_fid(addr)
-   local fid = self:add_friend_norequest(addr)
-   self.fid2addr[fid]  = addr
-   self.addr2fid[addr] = fid
+   local fid = self.addr2fid[addr]
+   if not fid then
+      fid = raw.tox_friend_add_norequest(self.cdata, to_c.bin(addr), nil)
+      self.fid2addr[fid]  = addr
+      self.addr2fid[addr] = fid
+   end
    return fid
-end
-
-function Bare:add_friend_norequest(addr)
-   return raw.tox_friend_add_norequest(self.cdata, to_c.addr(addr), nil)
 end
 
 Bare.default_add_friend_msg = "No message"
 function Bare:add_friend(addr, comment)
-   local addr, _comment = to_c.addr(addr), to_c.str(comment or self.default_add_friend_msg)
-   return raw.tox_friend_add(self.cdata, addr, _comment, #comment, nil)
+   local c_comment = to_c.str(comment or self.default_add_friend_msg)
+   local c_addr    = to_c.bin(addr)
+   local fid = raw.tox_friend_add(self.cdata, c_addr, c_comment, #comment, nil)
+   self.fid2addr[fid]  = addr
+   self.addr2fid[addr] = fid
 end
 
 
