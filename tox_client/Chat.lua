@@ -22,6 +22,7 @@ function Page.rpc_js:chat_html_list()
       local edge = self.edgechat:ensure_edge(fa, ta)
       local list = edge:list_events_after(state.after_time or 0)
 
+      state.repl = require "tox_client.repl_package"
       state.self = self
       state.fa = fa
       state.ta = ta
