@@ -1,8 +1,15 @@
 local This = {}
-for k,v in pairs(require "tox_client.info_on.contact.basic") do This[k] = v end
+for k,v in pairs(require "page_html.serve.Suggest") do This[k] = v end
 This.__index = This
 
 This.name = "contact/default"
+
+function This:init()
+   self.contact_name = rawget(self, "name") or "(noname)"
+   self.name = nil  -- Need this one cleared.
+end
+
+function This:priority() return 0 end
 
 function This:repl(state)
    if not self._repl then
