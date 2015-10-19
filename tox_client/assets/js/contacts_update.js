@@ -3,7 +3,7 @@ function contacts_update_cb(ret) {
 
     var html = ""
     var list = ret.html_list;
-    for( i in list ){ html = html + "<tr>" + list[i].html + "</tr"; }
+    for( i in list ){ html = html + "<tr>" + list[i].html + "</tr>"; }
     ge("list").innerHTML = html;
 }
 
