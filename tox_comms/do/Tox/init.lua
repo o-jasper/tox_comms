@@ -15,7 +15,36 @@ local This = {}
 for k,v in pairs(Bare) do This[k] = v end
 This.__index = This
 
+local function addr_fix(self, addr)
+   if self.overriding_addr[addr] then
+      return self.overriding_addr[addr]
+   elseif #addr > 64 then
+      local s_addr = string.sub(addr, 1, 64)
+      self.overriding_addr[s_addr] = addr
+
+      local edges = self.edgechat.edges
+      local got = edges[s_addr]
+      if got then
+         edges[addr] = got
+         edges[s_addr] = nil
+         for _, edge in pairs(edges) do
+            local got = edge[s_addr]
+            if got then
+               edge[addr]   = got
+               edge[s_addr] = nil
+            end
+         end
+      end
+      return addr
+   else
+      return addr
+   end
+end
+
 local function ensure_edge(self, fa, ta)
+   local fa = addr_fix(self, fa)
+   local ta = addr_fix(self, ta)
+
    local edge = self.edgechat:ensure_edge(fa,ta)
    edge.doer = self
    return edge
@@ -23,6 +52,8 @@ end
 
 function This:init()
    Bare.init(self)
+
+   self.overriding_addr = {}
 
    local edgechat, addr = assert(self.edgechat), self:addr()
    edgechat.doers[addr] = self
