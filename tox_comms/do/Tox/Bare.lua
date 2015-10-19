@@ -139,10 +139,12 @@ end
 
 function Bare:ensure_fid(addr)
    local fid = self.addr2fid[addr]
-   if not fid then
+   if not fid or fid == 4294967295 then
       -- Could be that we saw pubkey before, in that case, set it to the full address.
-      fid = self.addr2fid[string.sub(addr, 1,64)] or
-         raw.tox_friend_add_norequest(self.cdata, to_c.bin(addr), nil)
+      fid = self.addr2fid[string.sub(addr, 1,64)]
+      if not fid or fid == 4294967295 then
+         fid = raw.tox_friend_add_norequest(self.cdata, to_c.bin(addr), nil)
+      end
       biject_fid_addr(self, fid, addr)
    end
    return fid

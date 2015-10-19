@@ -18,7 +18,7 @@ Page.rpc_js = {}
 
 local ret_list = require "tox_client.lib.ret_list"
 local info_on  = require "page_html.info_on"
-function Page.rpc_js:contact_html_list(fa,state)
+function Page.rpc_js:contact_html_list(fa, state)
    local list = {}
    for ta, edge in pairs(self.edgechat:ensure_from(fa)) do
       local ret = { fa = fa, ta = ta }
@@ -34,8 +34,9 @@ function Page.rpc_js:contact_html_list(fa,state)
    return ret_list(info_list, state)
 end
 
-function Page.rpc_js:add_contact(fa, state)
-   -- TODO
+function Page.rpc_js:add_contact(fa, addr, message)
+   -- It is super-complicated.
+   self.edgechat.doers[fa]:add_friend(addr, message)
 end
 
 return Page

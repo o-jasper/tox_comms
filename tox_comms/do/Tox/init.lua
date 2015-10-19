@@ -98,7 +98,7 @@ end
 
 function This:add_friend(addr, msg)
    ensure_edge(self, self:addr(), addr)
-   return Bare.add_friend(self, addr, msg)
+   Bare.add_friend(self, addr, msg)
 end
 
 function This:do_msg(to_addr, i, kind, message)
