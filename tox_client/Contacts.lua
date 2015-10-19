@@ -4,12 +4,21 @@ Page.__index = Page
 
 Page.name = "contacts"
 
-Page.info_ons = { require "tox_client.info_on.contact.basic" }
+Page.info_ons = { require "tox_client.info_on.contact.default" }
+
+local fancy_hex = require("page_html.util.text.hex").fancy_hex
 
 function Page:repl(state)
    local fa = string.match(state.rest_path or ">_<", "^([%x]+)/?$") 
       or self.edge_toxes[1]:addr()
-   return { fa = fa, js = self:src_js() }
+   local repl = {
+      fa = fa, js = self:src_js(), css=self:src_css(),
+   }
+   function repl.f_addr(addr_mem, front_cnt, aft_cnt)
+      local addr = repl[string.match(addr_mem, "[%w_]+")]
+      return fancy_hex(addr, front_cnt, aft_cnt)
+   end
+   return repl
 end
 
 local rpc_js = require "tox_client.rpc_js"

@@ -8,9 +8,12 @@
     {%inject_js}
     {%js common}
     {%js contacts_update}
+
+    {%css default}
 </head>
 <body> 
- 
+  <p>Contacts from {%f_addr fa}</p>
+
   <button onclick="contacts_update();">Update</button> <span id="cnt">no</span> results.
   <table id="list">
   </table>
