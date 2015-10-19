@@ -9,8 +9,13 @@ function This:new(new)
    return new
 end
 
-This.allow_claims = { name=1024, status_message=1024 }
-This.do_history   = { name=true, status_message=true }
+--{ name=1024, status_message=1024, connection_status=1024 }
+This.allow_claims = setmetatable({}, {__index=function() return 256 end})
+This.do_history   = setmetatable({}, {__index=function() return true end})
+
+-- This.allow_claim_type_cnt = 16 TODO
+-- This.claim_type_cnt = 0
+
 This.history_age  = 10
 This.i = 0
 
