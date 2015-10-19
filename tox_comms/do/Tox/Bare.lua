@@ -70,15 +70,16 @@ function Bare:init()
          fd:close()
       end
    end
+   self.cdata = raw.tox_new(opts, nil)
+
    if self.friend_list_file then
       if self.friend_list_file == true then
          self.friend_list_file = self.dir .. "/friend_list.txt"
       end
       for addr in proper_io_lines(self.friend_list_file) do
-         self:ensure_addr(addr)
+         self:ensure_fid(addr)
       end
    end
-   self.cdata = raw.tox_new(opts, nil)
 
    if not opts and self.auto_bootstrap then  -- TODO do we know nodes already?
       self:default_bootstrap()
