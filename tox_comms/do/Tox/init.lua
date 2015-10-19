@@ -17,6 +17,7 @@ This.__index = This
 
 local function addr_fix(self, addr)
    if self.overriding_addr[addr] then
+      assert(#addr > 64)
       return self.overriding_addr[addr]
    elseif #addr > 64 then
       local s_addr = string.sub(addr, 1, 64)
@@ -27,12 +28,12 @@ local function addr_fix(self, addr)
       if got then
          edges[addr] = got
          edges[s_addr] = nil
-         for _, edge in pairs(edges) do
-            local got = edge[s_addr]
-            if got then
-               edge[addr]   = got
-               edge[s_addr] = nil
-            end
+      end
+      for _, edge in pairs(edges) do
+         local got = edge[s_addr]
+         if got then
+            edge[addr]   = got
+            edge[s_addr] = nil
          end
       end
       return addr
