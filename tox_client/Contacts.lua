@@ -6,22 +6,13 @@ Page.name = "contacts"
 
 Page.info_ons = { require "tox_client.info_on.contact.default" }
 
-local fancy_hex = require("page_html.util.text.hex").fancy_hex
-
 function Page:repl(state)
    local fa = string.match(state.rest_path or ">_<", "^([%x]+)/?$") 
       or self.edge_toxes[1]:addr()
-   local repl = {
-      fa = fa, js = self:src_js(), css=self:src_css(),
-   }
-   function repl.f_addr(addr_mem, front_cnt, aft_cnt)
-      local addr = repl[string.match(addr_mem, "[%w_]+")]
-      return fancy_hex(addr, front_cnt, aft_cnt)
-   end
-   return repl
+   return setmetatable({ name=self.name, fa = fa },
+      {__index = require "tox_client.repl_package" } )
 end
 
-local rpc_js = require "tox_client.rpc_js"
 Page.rpc_js = {}
 --for _, name in ipairs{"contacts_more"} do Page.rpc_js[name] = rpc_js[name] end
 
@@ -36,6 +27,7 @@ function Page.rpc_js:contact_html_list()
          table.insert(list, ret)
       end
 
+      state.repl = require "tox_client.repl_package"
       state.self = self
       local info_list = info_on.list(list, state, self.info_ons)
 

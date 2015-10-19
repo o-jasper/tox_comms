@@ -8,12 +8,11 @@ Page.info_ons = { require "tox_client.info_on.chat.basic" }
 
 function Page:repl(state)
    local fa,ta = string.match(state.rest_path or ">_<", "^([%x]+)/([%x]+)/?$")
-   return { fa = fa, ta = ta, js = self:src_js() }
+   return setmetatable({ fa = fa, ta = ta, name=self.name },
+      {__index = require "tox_client.repl_package" } )
 end
 
-local rpc_js = require "tox_client.rpc_js"
 Page.rpc_js = {}
---for _, name in ipairs{"list_events_all"} do Page.rpc_js[name] = rpc_js[name] end
 
 local ret_list = require "tox_client.lib.ret_list"
 local info_on  = require "page_html.info_on"

@@ -4,10 +4,23 @@ Page.__index = Page
 
 Page.name = "aliasses"
 
-function Page:repl(state) return { js = self:src_js() } end
+function Page:repl(state)
+   return setmetatable({ name=self.name },
+      { __index = require "tox_client.repl_package" })
+end
 
-local rpc_js = require "tox_client.rpc_js"
 Page.rpc_js = {}
-for _, name in ipairs{"tox_addrs"} do Page.rpc_js[name] = rpc_js[name] end
+
+function Page.rpc_js:tox_addrs()
+   return function()
+      print(self.edge_toxes)
+      local ret = {}
+      for _, el in ipairs(self.edge_toxes) do
+         print(el:addr())
+         table.insert(ret, el:addr())
+      end
+      return ret
+   end
+end
 
 return Page
