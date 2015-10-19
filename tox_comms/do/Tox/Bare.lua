@@ -121,14 +121,18 @@ function Bare:loop()
    end
 end
 
+local function biject_fid_addr(self, fid, addr)
+   self.fid2addr[fid]  = addr
+   self.addr2fid[addr] = fid
+end
+
 function Bare:ensure_addr(fid)
    local addr = self.fid2addr[fid]
    if not addr then
       local ret = ffi.new("uint8_t[?]", 32)
       raw.tox_friend_get_public_key(self.cdata, fid, ret, nil)
       addr = to_c.enhex(ret, 32)
-      self.fid2addr[fid]  = addr
-      self.addr2fid[addr] = fid
+      biject_fid_addr(self, fid, addr)
    end
    return addr
 end
@@ -136,9 +140,10 @@ end
 function Bare:ensure_fid(addr)
    local fid = self.addr2fid[addr]
    if not fid then
-      fid = raw.tox_friend_add_norequest(self.cdata, to_c.bin(addr), nil)
-      self.fid2addr[fid]  = addr
-      self.addr2fid[addr] = fid
+      -- Could be that we saw pubkey before, in that case, set it to the full address.
+      fid = self.addr2fid[string.sub(addr, 1,64)] or
+         raw.tox_friend_add_norequest(self.cdata, to_c.bin(addr), nil)
+      biject_fid_addr(self, fid, addr)
    end
    return fid
 end
@@ -148,8 +153,7 @@ function Bare:add_friend(addr, comment)
    local c_comment = to_c.str(comment or self.default_add_friend_msg)
    local c_addr    = to_c.bin(addr)
    local fid = raw.tox_friend_add(self.cdata, c_addr, c_comment, #comment, nil)
-   self.fid2addr[fid]  = addr
-   self.addr2fid[addr] = fid
+   biject_fid_addr(self, fid, addr)
 end
 
 local function ret_sized(from_raw, name, rawname, ctp, szname)
