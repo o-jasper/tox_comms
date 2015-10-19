@@ -17,26 +17,22 @@ Page.rpc_js = {}
 local ret_list = require "tox_client.lib.ret_list"
 local info_on  = require "page_html.info_on"
 
-function Page.rpc_js:chat_html_list()
-   return function (fa, ta, state)
-      local edge = self.edgechat:ensure_edge(fa, ta)
-      local list = edge:list_events_after(state.after_time or 0)
+function Page.rpc_js:chat_html_list(fa, ta, state)
+   local edge = self.edgechat:ensure_edge(fa, ta)
+   local list = edge:list_events_after(state.after_time or 0)
 
-      state.repl = require "tox_client.repl_package"
-      state.self = self
-      state.fa = fa
-      state.ta = ta
+   state.repl = require "tox_client.repl_package"
+   state.self = self
+   state.fa = fa
+   state.ta = ta
 
-      local info_list = info_on.list(list, state, self.info_ons)
-      state.where = self.where
-      return ret_list(info_list, state)
-   end
+   local info_list = info_on.list(list, state, self.info_ons)
+   state.where = self.where
+   return ret_list(info_list, state)
 end
 
-function Page.rpc_js:send_chat()
-   return function(fa, ta, kind, text)
-      self.edgechat:ensure_edge(fa, ta):do_msg(nil, kind, text)
-   end
+function Page.rpc_js:send_chat(fa, ta, kind, text)
+   self.edgechat:ensure_edge(fa, ta):do_msg(nil, kind, text)
 end
 
 return Page
