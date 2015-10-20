@@ -1,4 +1,4 @@
-local Page = {}
+local Page = { __name="Base" }
 
 function Page:new(new)
    new = setmetatable(new or {}, self)
