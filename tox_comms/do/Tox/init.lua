@@ -17,8 +17,9 @@ This.__index = This
 
 local function addr_fix(self, addr)
    if self.overriding_addr[addr] then
-      assert(#addr > 64)
-      return self.overriding_addr[addr]
+      local r_addr = self.overriding_addr[addr]
+      assert( #r_addr > 64 )
+      return r_addr
    elseif #addr > 64 then
       local s_addr = string.sub(addr, 1, 64)
       self.overriding_addr[s_addr] = addr
