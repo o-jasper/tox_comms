@@ -1,5 +1,5 @@
 local Page = {}
-for k,v in pairs(require "tox_client.BasePage") do Page[k] = v end
+for k,v in pairs(require "tox_client.functionality.Base") do Page[k] = v end
 Page.__index = Page
 
 Page.name = "aliasses"
