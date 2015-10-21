@@ -5,6 +5,9 @@
     <title>{%title}</title>
     
     <script>fa="{%fa}";ta="{%ta}";</script>
+
+    {%css user}
+
     {%inject_js}
     {%js common}
     {%js chat}
@@ -12,6 +15,7 @@
 </head>
 <body> 
  
+  <hr>
   <button onclick="chat_update();">Update</button> <span id="cnt">no</span> results.
   <table id="list">
   </table>

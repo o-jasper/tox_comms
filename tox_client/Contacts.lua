@@ -1,4 +1,4 @@
-local list = { "Base", "OneAddr", "ContactList", "ContactAdd" }
+local list = { "Base", "OneAddr", "ContactList", "ContactAdd", "AliasClaim"}
 
 local Page = require("tox_client.combine")(list, "tox_client.functionality.")
 
