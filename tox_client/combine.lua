@@ -1,3 +1,6 @@
+-- TODO kindah want something more wholesome.
+--  Basically want them to be separate when desired..
+
 local function copy(x)
    if type(x) == "table" and not x.__index then
       local ret = {}
@@ -21,9 +24,7 @@ return function(list, prep)
          for k,v in pairs(el) do
             if k == "rpc_js" then
                for k2,v2 in pairs(el.rpc_js) do Page.rpc_js[k2] = v2 end
-            elseif k == "__name" then
-               print("*", v)
-            else
+            elseif k ~= "__name" then
                Page[k] = copy(v)
             end
          end
