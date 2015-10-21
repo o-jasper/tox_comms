@@ -150,9 +150,9 @@ function Bare:ensure_fid(addr)
    return fid
 end
 
-Bare.default_add_friend_msg = "No message"
-function Bare:add_friend(addr, comment)
-   local c_comment = to_c.str(comment or self.default_add_friend_msg)
+Bare.default_friend_request_msg = "No message"
+function Bare:friend_request(addr, comment)
+   local c_comment = to_c.str(comment or self.default_friend_request_msg)
    local c_addr    = to_c.bin(addr)
    local fid = raw.tox_friend_add(self.cdata, c_addr, c_comment, #comment, nil)
    biject_fid_addr(self, fid, addr)

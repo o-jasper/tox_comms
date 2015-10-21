@@ -12,10 +12,10 @@ local Public = {}
 local function dehex(str)
    local i, ret = 1, {}
    while i < #str do
-      local x = string.find("0123456789ABCDEF", string.sub(str, i,i), 0, true) - 1
-      local y = string.find("0123456789ABCDEF", string.sub(str, i + 1,i + 1), 0, true) - 1
-      local here = 16*x + y
-      table.insert(ret, here)
+      local x = string.find("0123456789ABCDEF", string.sub(str, i,i), 0, true)
+      local y = string.find("0123456789ABCDEF", string.sub(str, i + 1,i + 1), 0, true)
+      assert(x and y, string.format("Not good; %s\n%s", string.sub(str, i, i + 1), str))
+      table.insert(ret, 16*(x - 1) + y - 1)
       i = i + 2
    end
    return ret
@@ -37,7 +37,7 @@ function Public.bin(bin)
    if type(bin) == "cdata" then
       return bin
    end
-   bin = type(bin) == "string" and dehex(bin) or bin
+   bin = (type(bin) == "string" and dehex(bin)) or bin
    local ret = ffi.new("uint8_t[?]", #bin)
    for j, v in ipairs(bin) do ret[j - 1] = v end
    return ret

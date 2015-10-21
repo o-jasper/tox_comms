@@ -85,8 +85,8 @@ function This:init()
    self:update_callback("friend_request", friend_request)
 end
 
-function This:do_claim(to, i, name, what)
-   -- NOTE: not particular to other side.
+function This:do_claim(to_addr, i, name, what)
+   -- NOTE: not particular to other side. `to_addr` ignored.
    if name == "status_message" then
       assert(type(what) == "string")
       raw.tox_self_set_status_message(self.cdata, what, #what, nil)
@@ -98,16 +98,14 @@ function This:do_claim(to, i, name, what)
    end
 end
 
-function This:add_friend(addr, msg)
-   ensure_edge(self, self:addr(), addr)
-   Bare.add_friend(self, addr, msg)
+function This:do_friend_request(to_addr, msg)
+   ensure_edge(self, self:addr(), to_addr)
+   Bare.friend_request(self, to_addr, msg)
 end
 
 function This:do_msg(to_addr, i, kind, message)
    local fid = self:ensure_fid(to_addr)
-   print(to_addr, fid, "->", kind, message)
    raw.tox_friend_send_message(self.cdata, fid, kind or 0,
                                to_c.str(message), #message, nil)
 end
-
 return This
