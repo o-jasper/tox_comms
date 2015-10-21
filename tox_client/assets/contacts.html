@@ -5,28 +5,24 @@
     <title>{%title}</title>
 
     <script>fa="{%fa}";</script>
+
+    {%css default}
+    {%css user}
+
     {%inject_js}
     {%js common}
     {%js contacts_update}
     {%js contacts}
-
-    {%css default}
 </head>
 <body> 
-  <input id="new_addr_input" ontouch="touch_addr_input();"
-         onchange="touch_addr_input();" onkeydown="touch_addr_input(event);">
-  <button id="force_toggle" onclick="force_toggle();">S</button><br>
-  <span id="new_message_area" hidden="true">
-    <input id="new_message_input"><br>
-    <button onclick="do_add_contact();">Friend request</button>
-  </span>
+  <h4>Friend request</h4>
+  {%parts/contact_add.html}
 
-  <p>Contacts from {%f_addr fa}</p>
+  <h4>Contacts</h4>
+  {%parts/contacts.html}
 
-  <button onclick="contacts_update();">Update</button> <span id="cnt">no</span> results.
-  <table id="list">
-  </table>
-
-  <script>contacts_update();</script>
+  <!-- <h4>Self info</h4>
+       TODO name, status message.
+    -->
 </body>
 </html>
