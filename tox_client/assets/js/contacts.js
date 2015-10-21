@@ -26,6 +26,8 @@ function do_add_contact() {
         contacts_update();
         ge("new_addr_input").value    = "";
         ge("new_message_input").value = "";
+        ge("new_addr_button").textContent = "Friend request";
     }
+    ge("new_addr_button").textContent = "Adding...";
     callback_add_contact([fa, ge("new_addr_input").value, ge("new_message_input").value], cb);
 }

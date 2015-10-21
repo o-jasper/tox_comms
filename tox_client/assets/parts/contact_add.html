@@ -2,6 +2,6 @@
        onchange="touch_addr_input();" onkeydown="touch_addr_input(event);">
 <button id="force_toggle" onclick="force_toggle();">S</button><br>
 <span id="new_message_area" hidden="true">
-  <input id="new_message_input"><br>
-  <button onclick="do_add_contact();">Friend request</button>
+  <input id="new_message_input" onkeydown="touch_message_input(event);"><br>
+  <button id="new_addr_button" onclick="do_add_contact();">Friend request</button>
 </span>
