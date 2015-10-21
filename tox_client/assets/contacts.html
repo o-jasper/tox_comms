@@ -13,8 +13,12 @@
     {%js common}
     {%js contacts_update}
     {%js contacts}
+    {%js alias_claim}
 </head>
 <body> 
+  <b>Name:</b> {%alias_set_claim name}<br>
+  <b>Status Message:</b> {%alias_set_claim status_message}
+
   <h4>Friend request</h4>
   {%parts/contact_add.html}
 
