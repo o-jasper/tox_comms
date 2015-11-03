@@ -33,11 +33,16 @@ function repl:f_addr(addr_mem, front_cnt, aft_cnt)
 end
 
 -- Time stuff.
-local time_instructed = require("page_html.util.text.time").instructed
-function repl:f_time(input)
-   local instruction, from = string.match(input, "([^ ]+)[ ]+([^ ]+)")
-   from = tonumber(from) or "time"
-   return time_instructed(instruction, self.state, self[from])
+--local time_instructed = require("page_html.util.text.time").instructed
+--function repl:f_time(input)
+--   local instruction, from = string.match(input, "[ ]*([^ ]+)[ ]*([^ ]*)")
+--   from = tonumber(from) or "time"
+--   return time_instructed(instruction, self.state, self[from])
+--end
+
+function repl:s_time(input)
+   local instruction, from = string.match(input, "[ ]*([^ ]+)[ ]*([^ ]*)")
+   return os.date(instruction, self[(from ~= "" and from) or "time"])
 end
 
 return repl
