@@ -1,10 +1,10 @@
 function contacts_update_cb(ret) {
-    ge("cnt").textContent = ret.cnt;
+    ge("contact_cnt").textContent = ret.cnt;
 
     var html = ""
     var list = ret.html_list;
     for( i in list ){ html = html + "<tr>" + list[i].html + "</tr>"; }
-    ge("list").innerHTML = html;
+    ge("contact_list").innerHTML = html;
 }
 
 function contacts_update() {

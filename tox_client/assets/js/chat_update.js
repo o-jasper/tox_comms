@@ -4,9 +4,9 @@ function chat_update_cb(ret) {
     after_time = ret.last_time;
     ret_cnt += ret.cnt;
 
-    ge("cnt").textContent = ret_cnt;
+    ge("chat_cnt").textContent = ret_cnt;
 
-    var list_el = ge("list");
+    var list_el = ge("chat_list");
     // List of stuff added at the end.
     var html_list = ret.html_list;
     for( i in html_list ){
