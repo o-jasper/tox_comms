@@ -8,6 +8,6 @@ function contacts_update_cb(ret) {
 }
 
 function contacts_update() {
-    ge("cnt").textContent = "X";
+    ge("contact_cnt").textContent = "X";
     callback_contact_html_list([fa, {"html_list":true}], contacts_update_cb);
 }
