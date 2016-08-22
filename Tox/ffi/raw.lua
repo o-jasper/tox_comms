@@ -1,4 +1,4 @@
---  Copyright (C) 07-08-2015 Jasper den Ouden.
+--  Copyright (C) 22-08-2016 Jasper den Ouden.
 --
 --  This is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published
@@ -19,7 +19,7 @@ assert(ffi, [[Need `require "ffi"` to work, luajit has it inbuild, lua afaik not
 
 -- NOTE: how it works seems bad style. Something in the _global_ state from
 -- ffi.cdef goes into the lib somehow.
-ffi.cdef(require "tox_comms.ffi.tox_api")
+ffi.cdef(require "Tox.ffi.tox_api")
 local lib = ffi.load(libfile)
 
 return lib

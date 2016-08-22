@@ -1,4 +1,6 @@
---  Copyright (C) 07-08-2015 Jasper den Ouden.
+-- TODO what is the role?
+
+--  Copyright (C) 22-08-2016 Jasper den Ouden.
 --
 --  This is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published
@@ -8,7 +10,7 @@
 -- Just stripping the preceeding `tox_` at the moment.
 
 local ffi = require "ffi"
-local raw = require "ffi.tox.raw"
+local raw = require "Tox.ffi.raw"
 
 local plain_funlist = {
    "version_major",
@@ -16,15 +18,22 @@ local plain_funlist = {
    "version_patch",
    "version_is_compatible",
    "options_new",
-   "new",
 }
 
 local opts_funlist = {
    options_default = false,
    options_free = false,   
 }
+local Public = { Opts={}, } --Tox = require "Tox.ffi.Tox" }
 
-local Public = { raw=raw, Tox=require "ffi.tox.Tox", Opts={} }
+for _, k in pairs(plain_funlist) do
+   local v = raw["tox_" .. k]
+   if v then
+      Public[k] = v
+   else
+      print("MISSING", "tox_" .. k)
+   end
+end
 
 Public.Opts.__index = Public.Opts
 
