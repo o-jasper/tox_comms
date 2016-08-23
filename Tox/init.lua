@@ -124,7 +124,7 @@ local function def_sized(name, ...)
    This[name] = ret_sized(raw, name, ...)
 end
 
-def_sized("get_name", "tox_self_get_name")
+def_sized("name", "tox_self_get_name")
 def_sized("status_message", "tox_self_get_status_message")
 def_sized("savedata", "tox_get_savedata")
 
@@ -155,6 +155,8 @@ local tox_funlist = {
    self_get_connection_status = "connection_status",
    self_get_status = "status",
    self_set_status = "set_status",
+
+   self_set_status_message = "set_status_message",
 
    self_get_nospam = "nospam",
    self_set_nospam = "set_nospam",
@@ -206,7 +208,9 @@ end
 function This:set_name(to, err)
    return raw.tox_self_set_name(self.cdata, to, #to, err or nil)
 end
-
+function This:set_status_message(to, err)
+   return raw.tox_self_set_status_message(self.cdata, to, #to, err or nil)
+end
 
 function This:update_callback(cb_name, set_fun)
    raw["tox_callback_" .. cb_name](self.cdata, set_fun, nil)
