@@ -23,16 +23,20 @@ end
 
 Public.dehex = dehex
 
+local function hex_char(i)
+   return string.sub("0123456789ABCDEF", i,i)
+end
+
 function Public.enhex(arr, sz)
    local ret = ""
    for i = 1, sz do
       local el = arr[i - 1] or string.byte(arr, i)
-      local x, y = 1 + el%16, 1 + math.floor(el/16)
-      ret = ret .. string.sub("0123456789ABCDEF", y,y) .. string.sub("0123456789ABCDEF", x,x)
+      ret = ret .. hex_char(1 + el%16) .. hex_char(1 + math.floor(el/16))
    end
    return ret
 end
 
+-- Hex to binary version thereof.
 function Public.bin(bin)
    if type(bin) == "cdata" then
       return bin
@@ -53,6 +57,7 @@ function Public.addr(addr)
    return ret
 end
 
+-- String to binary version of string.
 function Public.str(str, tp)
    assert(type(str) == "string",
           string.format("String to create not a string, but %s (%s)", type(str), str))
