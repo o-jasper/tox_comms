@@ -31,7 +31,7 @@ function Public.enhex(arr, sz)
    local ret = ""
    for i = 1, sz do
       local el = arr[i - 1] or string.byte(arr, i)
-      ret = ret .. hex_char(1 + el%16) .. hex_char(1 + math.floor(el/16))
+      ret = ret .. hex_char(1 + math.floor(el/16)) .. hex_char(1 + el%16)
    end
    return ret
 end
@@ -61,11 +61,12 @@ end
 function Public.str(str, tp)
    assert(type(str) == "string",
           string.format("String to create not a string, but %s (%s)", type(str), str))
-   local i, ret = 0, ffi.new(tp or "uint8_t[?]", #str)
+   local i, ret = 0, ffi.new(tp or "uint8_t[?]", #str + 1)
    while i < #str do
       ret[i] = string.byte(str, i + 1)
       i = i + 1
    end
+   ret[i] = string.byte("\0")
    return ret
 end
 
