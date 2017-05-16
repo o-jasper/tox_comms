@@ -9,7 +9,7 @@
 
 local ffi = require "ffi"
 
-local This = require("nunix.Class"):class_derive{ __name="Tox.bare" }
+local This = require("nunix.Class"):class_derive{ __name="Tox.Bare" }
 local raw = require "Tox.ffi.raw"
 local to_c = require "Tox.ffi.to_c"
 
@@ -28,12 +28,17 @@ local consts = {
 }
 
 This.consts = consts
-local option_list = require "Tox.data.settings"
+This.bootstrap_options = require "Tox.data.settings"
 
-function This:default_bootstrap()
-   local use = option_list[math.random(#option_list)]
-   -- TODO is this sufficient? No need to keep trying?
-   self:bootstrap(use.address, tonumber(use.port), use.userId, nil)
+function This:default_bootstrap(index)
+   local list = self.bootstrap_options
+   local index = index or math.random(#list)
+   local use = list[index]
+
+   local err_into = ffi.new("int[1]")
+   local ret = self:bootstrap(use.address, tonumber(use.port), use.userId, err_into)
+   print("Tried " .. index, use.address, ret, err_into[1])
+   return ret, err_into[1], use
 end
 
 function This:init()
@@ -83,25 +88,36 @@ function This:ensure_addr(fid)
 end
 
 function This:ensure_fid(addr)
-   local fid = self.addr2fid[addr]
+   local fid, err = self.addr2fid[addr], nil
    if not fid or fid == 4294967295 then
       -- Could be that we saw pubkey before, in that case, set it to the full address.
       fid = self.addr2fid[string.sub(addr, 1,64)]
       if not fid or fid == 4294967295 then
-         fid = raw.tox_friend_add_norequest(self.cdata, to_c.bin(addr), nil)
+         local err_into = ffi.new("int[1]")
+         fid = raw.tox_friend_add_norequest(self.cdata, to_c.bin(addr), err_into)
+         err = err_into[1]
       end
       biject_fid_addr(self, fid, addr)
    end
-   return fid
+   -- TODO with all these err thingies, also give more info.
+   -- Recognize errors by their ID and pointer to table.
+   return fid, err
 end
 
 This.default_friend_request_msg = "No message"
 function This:friend_request(addr, comment)
    local comment = comment or self.default_friend_request_msg
    local c_comment = to_c.str(comment)
-   local c_addr    = to_c.bin(assert(addr, "No addr?"))
-   local fid = raw.tox_friend_add(self.cdata, c_addr, c_comment, #comment, nil)
+   local c_addr     =to_c.bin(assert(addr, "No addr?"))
+   local err_into = ffi.new("int[1]")
+   local fid = raw.tox_friend_add(self.cdata, c_addr, c_comment, #comment + 1, err_into)
    biject_fid_addr(self, fid, addr)
+   return fid, err_into[1]
+end
+
+function This:raw_send_message(fid, message, kind)
+   raw.tox_friend_send_message(self.cdata, fid, kind or 0,
+                               to_c.str(message), #message, nil)
 end
 
 function This:send_message(to_addr, message, kind)
@@ -195,11 +211,15 @@ local tox_funlist = {
 --   callback_friend_lossy_packet = false,
 --   callback_friend_lossless_packet = false,
 
-   iterate = "step",
+--   iterate = "step",
    iteration_interval = "step_interval",
 
-   add_groupchat = false,
+--   add_groupchat = false,
 }
+function This:step()
+   raw.tox_iterate(self.cdata, nil)
+end
+
 -- Copy-in either raw or use provided name.
 for k, rename in pairs(tox_funlist) do
    local fun = raw["tox_" .. k]
@@ -215,7 +235,7 @@ function This:set_status_message(to, err)
 end
 
 function This:set_callback(cb_name, set_fun)
-   raw["tox_callback_" .. cb_name](self.cdata, set_fun, nil)
+   raw["tox_callback_" .. cb_name](self.cdata, set_fun)
 end
 
 local function first_ffi_str(str, sz, ...)
@@ -232,9 +252,9 @@ function This:set_friend_callback(cb_name, set_fun)
       local function cb(tox_cdata, fid, ...)
          set_fun(tox_cdata, fid, af(...))
       end
-      set_cb(self.cdata, cb, nil)
+      set_cb(self.cdata, cb)
    else
-      set_cb(self.cdata, set_fun, nil)
+      set_cb(self.cdata, set_fun)
    end
 end
 
