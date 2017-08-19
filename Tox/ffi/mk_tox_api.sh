@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "return [[ $(cat tox_api.h) ]]" > tox_api.lua
+echo "return [[ $(cat $2) ]]" > $1

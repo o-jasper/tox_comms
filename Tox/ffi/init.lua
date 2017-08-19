@@ -10,7 +10,6 @@
 -- Just stripping the preceeding `tox_` at the moment.
 
 local ffi = require "ffi"
-local raw = require "Tox.ffi.raw"
 
 local plain_funlist = {
    "version_major",
@@ -25,6 +24,8 @@ local opts_funlist = {
    options_free = false,   
 }
 local Public = { Opts={}, } --Tox = require "Tox.ffi.Tox" }
+
+local raw = require "Tox.ffi.raw"
 
 for _, k in pairs(plain_funlist) do
    local v = raw["tox_" .. k]

@@ -36,7 +36,8 @@ function This:default_bootstrap(index)
    local use = list[index]
 
    local err_into = ffi.new("int[1]")
-   local ret = self:bootstrap(use.address, tonumber(use.port), use.userId, err_into)
+   local ret = self:bootstrap(use.address,
+                              tonumber(use.port), to_c.bin(use.userId), err_into)
    print("Tried " .. index, use.address, ret, err_into[1])
    return ret, err_into[1], use
 end
@@ -243,7 +244,7 @@ local function first_ffi_str(str, sz, ...)
 end
 
 function This:set_friend_callback(cb_name, set_fun)
-   local argsfix = {
+   local argsfix = {  -- Messes with arguments lua-izing them a bit.
       name = first_ffi_str, status_message = first_ffi_string,
       message = function(kind, msg, msg_sz, ...) return kind, ffi.string(msg, msg_sz), ... end,
    }
