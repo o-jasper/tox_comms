@@ -20,8 +20,11 @@ typedef struct ToxEvents {
    Tox_CB_Event* events;
 } ToxEvents;
 
-ToxEvents* ToxEvents_new(Tox* tox);
+ToxEvents* new_ToxEvents(Tox* tox);
 
 void ToxEvents_register_callbacks(ToxEvents* s);
 
 Tox_CB_Event ToxEvents_poll(ToxEvents* s);
+
+// Must use this one, otherwise wrong userdata=>segfault.
+void ToxEvents_iterate(ToxEvents* s);

@@ -5,13 +5,14 @@
 
 ToxEvents* ToxEvents_init(ToxEvents* s, Tox* tox) {
    s->tox = tox;
-   s->use_cnt = 0; s->space_cnt = 1;  // TODO increase initial count.
+   s->use_cnt = 0; s->space_cnt = 16;  // TODO increase initial count.
    // Make space.
    s->events = (Tox_CB_Event*)malloc(sizeof(Tox_CB_Event)*s->space_cnt);
+   s->events[0].tp = Ev_dud;  // End marker.
    return s;
 }
 
-ToxEvents* ToxEvents_new(Tox* tox) {
+ToxEvents* new_ToxEvents(Tox* tox) {
    return ToxEvents_init((ToxEvents*)malloc(sizeof(ToxEvents)), tox);
 }
 
@@ -19,6 +20,7 @@ void ToxEvents_ensure_space(ToxEvents* s) {
    if( s->use_cnt >= s->space_cnt ) {  // Ran out of space, double.
       s->space_cnt *= 2;
       s->events = (Tox_CB_Event*)realloc((void*)s->events,  s->space_cnt);
+      s->events[s->use_cnt].tp = Ev_dud;  // Ensure end marker.
    }
 }
 /*
