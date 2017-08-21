@@ -23,7 +23,54 @@ void ToxEvents_ensure_space(ToxEvents* s) {
       s->events[s->use_cnt].tp = Ev_dud;  // Ensure end marker.
    }
 }
+Tox_CB_Event* ToxEvents_prep(ToxEvents* s, EvTp tp) {
+   ToxEvents_ensure_space(s);
+   Tox_CB_Event* ev = s->events + s->use_cnt;
+   ev->tp = tp;
+   ev->friend_number = 0;
+   ev->type = 0;
+   ev->message = NULL;
+   ev->length = 0;
+   return ev;
+}
+void tox_ev_friend_connection_status_cb(Tox *tox, uint32_t friend_number,
+                                        TOX_CONNECTION connection_status, void *user_data) {
+   ToxEvents* s = (ToxEvents*)user_data;
+   Tox_CB_Event* ev = ToxEvents_prep(s, Ev_friend_connection_status);
+   ev->friend_number = friend_number;
+   ev->connection_status = connection_status;
+   s->use_cnt++;
+}
+void tox_ev_friend_status_cb(Tox *tox, uint32_t friend_number,
+                             TOX_USER_STATUS status, void *user_data) {
+   ToxEvents* s = (ToxEvents*)user_data;
+   Tox_CB_Event* ev = ToxEvents_prep(s, Ev_friend_status);
+   ev->friend_number = friend_number;
+   ev->status = status;
+   s->use_cnt++;
+}
+void tox_ev_friend_status_message_cb(Tox *tox, uint32_t friend_number,
+                           const uint8_t *message, size_t length, void *user_data) {
+   ToxEvents* s = (ToxEvents*)user_data;
+   Tox_CB_Event* ev = ToxEvents_prep(s, Ev_friend_status_message);
+   ev->friend_number = friend_number;
+   ev->message = message;
+   ev->length = length;
+   s->use_cnt++;
+}
+void tox_ev_friend_name_cb(Tox *tox, uint32_t friend_number,
+                           const uint8_t *name, size_t length, void *user_data) {
+   ToxEvents* s = (ToxEvents*)user_data;
+   Tox_CB_Event* ev = ToxEvents_prep(s, Ev_friend_name);
+   ev->friend_number = friend_number;
+   ev->name = name;
+   ev->length = length;
+   s->use_cnt++;
+}
+
 /*
+void tox_callback_self_connection_status(Tox *tox, tox_self_connection_status_cb *callback);
+
 void tox_callback_friend_read_receipt(Tox *tox, tox_friend_read_receipt_cb *callback);
 void tox_callback_file_recv_control(Tox *tox, tox_file_recv_control_cb *callback);
 void tox_callback_file_chunk_request(Tox *tox, tox_file_chunk_request_cb *callback);
@@ -43,13 +90,9 @@ void tox_ev_friend_request_cb(Tox *tox, const uint8_t *public_key,
                               const uint8_t *message, size_t length,
                               void *user_data) {
    ToxEvents* s = (ToxEvents*)user_data;
-   ToxEvents_ensure_space(s);
-   Tox_CB_Event* event = s->events + s->use_cnt;  // Set it.
-   event->tp = Ev_friend_request;
-   event->friend_number = 0; //(dont care)
-   event->type = 0; //(dont care)
-   event->message = message;
-   event->length = length;
+   Tox_CB_Event* ev = ToxEvents_prep(s, Ev_friend_request);
+   ev->message = message;
+   ev->length = length;
    s->use_cnt ++;  // Indicate that one is used.
 }
 
@@ -57,20 +100,23 @@ void tox_ev_friend_message_cb(Tox *tox,
                               uint32_t friend_number, TOX_MESSAGE_TYPE type, const uint8_t *message,
                               size_t length, void *user_data) {
    ToxEvents* s = (ToxEvents*)user_data;
-   ToxEvents_ensure_space(s);
-   Tox_CB_Event* event = s->events + s->use_cnt;  // Set it.
-   event->tp = Ev_friend_message;
-   event->friend_number = friend_number;
-   event->type = type;
-   event->message = message;
-   event->length = length;
+   Tox_CB_Event* ev = ToxEvents_prep(s, Ev_friend_message);
+   ev->friend_number = friend_number;
+   ev->type = type;
+   ev->message = message;
+   ev->length = length;
    s->use_cnt ++;  // Indicate that one is used.
 }
 
 void ToxEvents_register_callbacks(ToxEvents* s) {
-   tox_callback_friend_request(s->tox, tox_ev_friend_request_cb);
-   tox_callback_friend_message(s->tox, tox_ev_friend_message_cb);
+   Tox *tox = s->tox;
+   tox_callback_friend_request(tox, tox_ev_friend_request_cb);
+   tox_callback_friend_message(tox, tox_ev_friend_message_cb);
    // TODO more of them.
+   tox_callback_friend_connection_status(tox, tox_ev_friend_connection_status_cb);
+   tox_callback_friend_status(tox, tox_ev_friend_status_cb);
+   tox_callback_friend_name(tox, tox_ev_friend_name_cb);
+   tox_callback_friend_status_message(tox, tox_ev_friend_status_message_cb);
 }
 
 // Not returning pointers, because `realloc` may invalidate them.

@@ -1,17 +1,26 @@
 return [[ 
 typedef enum {
    Ev_dud = 0,
-   Ev_friend_request = 1,
-   Ev_friend_message = 2,
+//   Ev_connection_status = 10,
+   Ev_friend_message = 90,
+   Ev_friend_request = 100,
+   Ev_friend_connection_status = 101,
+   Ev_friend_status = 102,
+   Ev_friend_status_message = 103,
+   Ev_friend_name = 104,
 } EvTp;
 
 // Catchall object.
 typedef struct Tox_CB_Event {
    EvTp tp;
    uint32_t friend_number;
-   TOX_MESSAGE_TYPE type;
-   uint8_t *message; size_t length;
-//   char* 
+   union {  // NOTE: can certainly imagine subtle bugs, so do away with union if needed.
+      TOX_MESSAGE_TYPE type;
+      TOX_USER_STATUS status;
+      TOX_CONNECTION connection_status;
+   };
+   union{ uint8_t *message; uint8_t *name; };
+   size_t length;
 } Tox_CB_Event;
 
 typedef struct ToxEvents {
