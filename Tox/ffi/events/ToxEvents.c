@@ -58,15 +58,6 @@ void tox_ev_friend_status_message_cb(Tox *tox, uint32_t friend_number,
    ev->length = length;
    s->use_cnt++;
 }
-void tox_ev_friend_name_cb(Tox *tox, uint32_t friend_number,
-                           const uint8_t *name, size_t length, void *user_data) {
-   ToxEvents* s = (ToxEvents*)user_data;
-   Tox_CB_Event* ev = ToxEvents_prep(s, Ev_friend_name);
-   ev->friend_number = friend_number;
-   ev->name = name;
-   ev->length = length;
-   s->use_cnt++;
-}
 
 /*
 void tox_callback_self_connection_status(Tox *tox, tox_self_connection_status_cb *callback);
@@ -86,6 +77,15 @@ void tox_callback_friend_lossless_packet(Tox *tox, tox_friend_lossless_packet_cb
 
 // Registers callbacks needed to get data needed for the events.
 
+
+void tox_ev_self_connection_status_cb(Tox *tox,
+                                      TOX_CONNECTION connection_status, void *user_data) {
+   ToxEvents* s = (ToxEvents*)user_data;
+   Tox_CB_Event* ev = ToxEvents_prep(s, Ev_self_connection_status);
+   ev->connection_status = connection_status;
+   s->use_cnt ++;  // Indicate that one is used.
+}
+
 void tox_ev_friend_request_cb(Tox *tox, const uint8_t *public_key,
                               const uint8_t *message, size_t length,
                               void *user_data) {
@@ -94,6 +94,15 @@ void tox_ev_friend_request_cb(Tox *tox, const uint8_t *public_key,
    ev->message = message;
    ev->length = length;
    s->use_cnt ++;  // Indicate that one is used.
+}
+void tox_ev_friend_name_cb(Tox *tox, uint32_t friend_number,
+                           const uint8_t *name, size_t length, void *user_data) {
+   ToxEvents* s = (ToxEvents*)user_data;
+   Tox_CB_Event* ev = ToxEvents_prep(s, Ev_friend_name);
+   ev->friend_number = friend_number;
+   ev->name = name;
+   ev->length = length;
+   s->use_cnt++;
 }
 
 void tox_ev_friend_message_cb(Tox *tox,
@@ -107,11 +116,26 @@ void tox_ev_friend_message_cb(Tox *tox,
    ev->length = length;
    s->use_cnt ++;  // Indicate that one is used.
 }
+void tox_ev_friend_typing_cb(Tox *tox, uint32_t friend_number,
+                             _Bool is_typing, void *user_data) {
+   ToxEvents* s = (ToxEvents*)user_data;
+   Tox_CB_Event* ev = ToxEvents_prep(s, Ev_friend_typing);
+   ev->friend_number = friend_number;
+   ev->is_typing = is_typing;
+   s->use_cnt;
+}
+
+void tox_callback_friend_typing(Tox *tox, tox_friend_typing_cb *callback);
 
 void ToxEvents_register_callbacks(ToxEvents* s) {
    Tox *tox = s->tox;
+
+   tox_callback_self_connection_status(tox, tox_ev_self_connection_status_cb);
+
    tox_callback_friend_request(tox, tox_ev_friend_request_cb);
    tox_callback_friend_message(tox, tox_ev_friend_message_cb);
+   tox_callback_friend_typing(tox, tox_ev_friend_typing_cb);
+
    // TODO more of them.
    tox_callback_friend_connection_status(tox, tox_ev_friend_connection_status_cb);
    tox_callback_friend_status(tox, tox_ev_friend_status_cb);

@@ -25,8 +25,9 @@ local _, copas = pcall(function() return require "copas" end)
 
 copas = flags.copas and copas
 
-for _,key in pairs{"name", "status_message", "status", "connection_status", "message"} do
-   n:set_friend_callback(key, print)
+for _,key in pairs{"name", "status_message", "status", "connection_status", "message",
+                   "typing"} do
+   n:set_friend_callback(key, function(...) print("-",key, ...) end)
 end
 
 local the_friend

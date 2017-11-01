@@ -23,8 +23,9 @@ end
 
 This.cb_names = {}
 for _, k in ipairs{
+   "self_connection_status",
    "friend_connection_status", "friend_status", "friend_status_message", "friend_name",
-   "friend_request", "friend_message",
+   "friend_request", "friend_message", "friend_typing",
                   } do
    This.cb_names[ffi_events["Ev_" .. k]] = k
 end
@@ -37,9 +38,13 @@ function This:set_friend_callback(cb_name, set_fun)
    self.callbacks[ffi_events["Ev_friend_" .. cb_name]] = set_fun
 end
 
+local function connstat(cb, ev) cb(ev.connection_status) end
 local cb_funs = {
    [ffi_events.Ev_dud] = function() error("shouldnt happen") end,
-   [ffi_events.Ev_friend_connection_status] = function(cb, ev) cb(ev.connection_status) end,
+
+   [ffi_events.Ev_self_connection_status] = connstat,
+
+   [ffi_events.Ev_friend_connection_status] = connstat,
    [ffi_events.Ev_friend_status] = function(cb, ev) cb(ev.status) end,
    [ffi_events.Ev_friend_status_message] = function(cb, ev)
       cb(ev.friend_number, ffi.string(ev.message, ev.length))
@@ -50,8 +55,12 @@ local cb_funs = {
    [ffi_events.Ev_friend_request] = function(cb, ev)
       cb(ev.friend_number, ffi.string(ev.message, ev.length))
    end,
+
    [ffi_events.Ev_friend_message] = function(cb, ev)
       cb(ev.friend_number, ev.type, ffi.string(ev.message, ev.length))
+   end,
+   [ffi_events.Ev_friend_typing] = function(cb, ev)
+      cb(ev.friend_number, ev.is_typing);
    end,
 }
 

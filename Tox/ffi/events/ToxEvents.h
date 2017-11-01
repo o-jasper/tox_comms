@@ -1,8 +1,9 @@
 
 typedef enum {
    Ev_dud = 0,
-//   Ev_connection_status = 10,
+   Ev_self_connection_status = 10,
    Ev_friend_message = 90,
+   Ev_friend_typing = 91,
    Ev_friend_request = 100,
    Ev_friend_connection_status = 101,
    Ev_friend_status = 102,
@@ -18,6 +19,7 @@ typedef struct Tox_CB_Event {
       TOX_MESSAGE_TYPE type;
       TOX_USER_STATUS status;
       TOX_CONNECTION connection_status;
+      _Bool is_typing;
    };
    union{ uint8_t *message; uint8_t *name; };
    size_t length;
